@@ -121,6 +121,19 @@ class FigureTest(StoreTest):
         fig = ag.crop_figure(ag.load_crops("Togo"), "Maize (corn)", "fr")
         self.assertEqual(len(fig.data), 2)
 
+    def test_render_crop_starts_at_first_year_with_expenditure(self):
+        crops = ag.load_crops("Togo")
+        earlier = crops[crops["item"] == "Maize (corn)"].iloc[[0]].copy()
+        earlier["year"] = 2020
+        crops = pd.concat([crops, earlier], ignore_index=True)
+        spending = ag.load_spending("Togo")
+        spending.loc[spending["year"] < 2023, "expenditure"] = pd.NA
+
+        figure, _ = ag.render_crop(crops, "Maize (corn)", "fr", spending)
+
+        production = next(trace for trace in figure.data if trace.name == "Production")
+        self.assertEqual(list(production.x), [2023, 2024])
+
     def test_missing_data_reads_unavailable(self):
         fig, text = ag.render_spending(None, "fr")
         self.assertEqual(text, "Données non disponibles pour cette période.")

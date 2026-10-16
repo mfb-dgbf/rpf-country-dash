@@ -212,4 +212,8 @@ def render_spending(df, lang):
 def render_crop(df, crop, lang, spending=None):
     if df is None or crop is None:
         return unavailable(lang)
+    if spending is not None:
+        spending_years = spending.loc[spending["expenditure"].notna(), "year"]
+        if not spending_years.empty:
+            df = df[df["year"] >= spending_years.min()]
     return crop_figure(df, crop, lang, spending), crop_narrative(df, crop, lang, spending)
