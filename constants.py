@@ -51,6 +51,10 @@ COMPOSITE_VIEW_COUNTRIES = frozenset()
 # "Exécution du budget" page built on it.
 EXECUTION_VIEW_COUNTRIES = frozenset({"Togo"})
 
+# Countries whose BOOST data carry the "Agriculture" sub-function, and the
+# « Agriculture » page that sets that spending next to FAOSTAT crop data.
+AGRICULTURE_VIEW_COUNTRIES = frozenset({"Togo"})
+
 
 def get_map_disclaimer(lang="en"):
     return t("disclaimer.map", lang)

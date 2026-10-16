@@ -4,6 +4,38 @@ TRANSLATIONS = {
     "nav.education": "Education",
     "nav.health": "Health",
     "nav.about": "About",
+    "nav.agriculture": "Agriculture",
+
+    # --- Agriculture page ---
+    "agriculture.intro": "Public spending on agriculture (BOOST, sub-function Agriculture) and crop production (FAOSTAT) side by side. The page describes both series; a link between them cannot be drawn from these figures alone.",
+    "agriculture.heading.spending": "How much does the government spend on agriculture?",
+    "agriculture.heading.crops": "How have crop production and yield changed?",
+    "agriculture.crop": "Crop",
+    "agriculture.chart.spending": "Public spending on agriculture",
+    "agriculture.chart.crop": "{crop}: production and yield",
+    "agriculture.chart.crop_budget": "{crop}: production, yield and agriculture budget",
+    "agriculture.trace.budget": "Approved budget",
+    "agriculture.trace.executed": "Executed spending",
+    "agriculture.trace.production": "Production",
+    "agriculture.trace.yield": "Yield",
+    "agriculture.axis.production": "Production (tonnes)",
+    "agriculture.axis.yield": "Yield (kg/ha)",
+    "agriculture.axis.budget": "Agriculture budget",
+    "agriculture.narrative.spending": "Executed public spending on agriculture went from {first} in {start} to {last} in {end}, with a high of {peak} in {peak_year}. Over the period, {rate:.1f}% of the approved budget was spent.",
+    "agriculture.narrative.crop": "{crop}: {p_first} tonnes in {start} and {p_last} tonnes in {end} ({change:+.1f}%); yield {y_first} kg/ha in {start} and {y_last} kg/ha in {end}.",
+    "agriculture.narrative.flag": " The {end} figure is {flag} (FAOSTAT).",
+    "agriculture.narrative.crop_spending": " From {start} to {end}, executed spending on agriculture went from {s_first} to {s_last} ({s_change:+.1f}%) and this crop's production from {p_first} to {p_last} tonnes ({p_change:+.1f}%).",
+    "agriculture.flag.A": "an official figure",
+    "agriculture.flag.E": "an FAO estimate",
+    "agriculture.flag.I": "imputed by FAO",
+    "agriculture.flag.X": "taken from another organisation",
+    "agriculture.crop.56": "Maize",
+    "agriculture.crop.125": "Cassava",
+    "agriculture.crop.137": "Yams",
+    "agriculture.crop.83": "Sorghum",
+    "agriculture.crop.236": "Soya beans",
+    "agriculture.crop.176": "Dry beans",
+    "agriculture.crop.27": "Rice (paddy)",
     "nav.logout": "logout",
 
     # --- Login ---
@@ -559,6 +591,7 @@ TRANSLATIONS = {
 
     # --- Source metadata modal (source labels) ---
     "source.boost.label": "BOOST Expenditure Data",
+    "source.fao_crop_production.label": "Crop area, yield and production",
     "source.boost_edu.label": "Public Education Expenditure",
     "source.boost_health.label": "Public Health Expenditure",
     "source.poverty_rate.label": "Poverty Rate",
@@ -573,6 +606,7 @@ TRANSLATIONS = {
 
     # --- Source metadata modal (source names) — shared across sources ---
     "source_name.world_bank_boost": "World Bank BOOST",
+    "source_name.faostat": "FAO (FAOSTAT)",
     "source_name.world_bank_pip": "World Bank Poverty and Inequality Platform",
     "source_name.world_bank": "World Bank",
     "source_name.world_bank_icp": "World Bank ICP",

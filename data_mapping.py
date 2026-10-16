@@ -272,6 +272,8 @@ function_data_mapping = {
     "togo_revenue_budget": lambda: _db().get_togo_revenue_budget_data(),
     "government_revenue_expenditure": lambda: _db().get_government_revenue_expenditure_data(),
     "togo_execution": lambda: normalise_execution(_db().get_togo_execution_data()),
+    "fao_crop_production": lambda: _db().get_fao_crop_production(),
+    "agriculture_spending": lambda: _db().get_agriculture_spending(),
     # Transformation loaders
     "func_econ_raw": load_func_econ_raw,
     "func_by_country_year": load_func_by_country_year,

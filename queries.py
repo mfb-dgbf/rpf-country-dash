@@ -209,6 +209,24 @@ class QueryService:
         """
         return self.fetch_data(query)
 
+    def get_fao_crop_production(self):
+        query = f"""
+            SELECT country_name, year, item_code, item, area_harvested_ha, yield_kg_ha,
+                   production_t, production_flag
+            FROM prd_mega.{INDICATOR_SCHEMA}.fao_crop_production
+        """
+        return self.fetch_data(query)
+
+    def get_agriculture_spending(self):
+        query = f"""
+            SELECT country_name, year, SUM(expenditure) AS expenditure, SUM(budget) AS budget,
+                   SUM(real_expenditure) AS real_expenditure
+            FROM prd_mega.{BOOST_SCHEMA}.expenditure_by_country_geo0_func_sub_year
+            WHERE func_sub = 'Agriculture'
+            GROUP BY country_name, year
+        """
+        return self.fetch_data(query)
+
     def get_learning_poverty_rate(self):
         query = f"""
             SELECT * FROM prd_mega.{INDICATOR_SCHEMA}.learning_poverty_rate

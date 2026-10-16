@@ -4,6 +4,38 @@ TRANSLATIONS = {
     "nav.education": "Éducation",
     "nav.health": "Santé",
     "nav.about": "À propos",
+    "nav.agriculture": "Agriculture",
+
+    # --- Agriculture page ---
+    "agriculture.intro": "Les dépenses publiques d'agriculture (BOOST, sous-fonction Agriculture) et la production agricole (FAOSTAT), côte à côte. La page décrit les deux séries ; un lien entre elles ne se déduit pas de ces seuls chiffres.",
+    "agriculture.heading.spending": "Combien l'État dépense-t-il pour l'agriculture ?",
+    "agriculture.heading.crops": "Comment la production et le rendement des cultures ont-ils évolué ?",
+    "agriculture.crop": "Culture",
+    "agriculture.chart.spending": "Dépenses publiques d'agriculture",
+    "agriculture.chart.crop": "{crop} : production et rendement",
+    "agriculture.chart.crop_budget": "{crop} : production, rendement et budget d'agriculture",
+    "agriculture.trace.budget": "Budget approuvé",
+    "agriculture.trace.executed": "Dépense exécutée",
+    "agriculture.trace.production": "Production",
+    "agriculture.trace.yield": "Rendement",
+    "agriculture.axis.production": "Production (tonnes)",
+    "agriculture.axis.yield": "Rendement (kg/ha)",
+    "agriculture.axis.budget": "Budget d'agriculture",
+    "agriculture.narrative.spending": "La dépense publique d'agriculture exécutée est passée de {first} en {start} à {last} en {end}, avec un maximum de {peak} en {peak_year}. Sur la période, {rate:.1f} % du budget approuvé a été exécuté.",
+    "agriculture.narrative.crop": "{crop} : {p_first} tonnes en {start} et {p_last} tonnes en {end} ({change:+.1f} %) ; rendement de {y_first} kg/ha en {start} et de {y_last} kg/ha en {end}.",
+    "agriculture.narrative.flag": " Le chiffre de {end} est {flag} (FAOSTAT).",
+    "agriculture.narrative.crop_spending": " De {start} à {end}, la dépense d'agriculture exécutée est passée de {s_first} à {s_last} ({s_change:+.1f} %) et la production de cette culture de {p_first} à {p_last} tonnes ({p_change:+.1f} %).",
+    "agriculture.flag.A": "un chiffre officiel",
+    "agriculture.flag.E": "une estimation de la FAO",
+    "agriculture.flag.I": "une valeur imputée par la FAO",
+    "agriculture.flag.X": "repris d'une autre organisation",
+    "agriculture.crop.56": "Maïs",
+    "agriculture.crop.125": "Manioc",
+    "agriculture.crop.137": "Igname",
+    "agriculture.crop.83": "Sorgho",
+    "agriculture.crop.236": "Soja",
+    "agriculture.crop.176": "Haricots secs",
+    "agriculture.crop.27": "Riz paddy",
     "nav.logout": "déconnexion",
 
     # --- Login ---
@@ -659,6 +691,7 @@ TRANSLATIONS = {
 
     # --- Source metadata modal (source labels) ---
     "source.boost.label": "Données de dépenses BOOST",
+    "source.fao_crop_production.label": "Superficie, rendement et production des cultures",
     "source.boost_edu.label": "Dépenses publiques d'éducation",
     "source.boost_health.label": "Dépenses publiques de santé",
     "source.poverty_rate.label": "Taux de pauvreté",
@@ -673,6 +706,7 @@ TRANSLATIONS = {
 
     # --- Source metadata modal (source names) — shared across sources ---
     "source_name.world_bank_boost": "BOOST de la Banque mondiale",
+    "source_name.faostat": "FAO (FAOSTAT)",
     "source_name.world_bank_pip": "Plateforme de la Banque mondiale sur la pauvreté et les inégalités",
     "source_name.world_bank": "Banque mondiale",
     "source_name.world_bank_icp": "ICP de la Banque mondiale",
