@@ -20,6 +20,7 @@ from dash import (
 from urllib.parse import parse_qs, urlparse
 
 from components.country_selector import country_select_style, country_selector
+from components.sidebar_nav import nav_items
 from components.source_metadata_popover import (
     CHART_METADATA,
     build_modal_children,
@@ -246,13 +247,12 @@ def update_active_lang(lang):
 @app.callback(
     Output("sidebar-nav", "children"),
     Input("stored-language", "data"),
+    Input("country-select", "value"),
 )
-def update_nav_links(lang):
+def update_nav_links(lang, country):
     return [
-        dbc.NavLink(t("nav.overview", lang), href=get_relative_path("home"), active="exact"),
-        dbc.NavLink(t("nav.education", lang), href=get_relative_path("education"), active="exact"),
-        dbc.NavLink(t("nav.health", lang), href=get_relative_path("health"), active="exact"),
-        dbc.NavLink(t("nav.about", lang), href=get_relative_path("about"), active="exact"),
+        dbc.NavLink(t(key, lang), href=get_relative_path(page), active="exact")
+        for key, page in nav_items(country)
     ]
 
 
