@@ -104,6 +104,13 @@ _IMF_WEO = {
     "source_url": "https://www.imf.org/en/Publications/WEO",
 }
 
+_FAOSTAT = {
+    "key": "fao_crop_production",
+    "label_key": "source.fao_crop_production.label",
+    "source_name_key": "source_name.faostat",
+    "source_url": "https://www.fao.org/faostat/en/#data/QCL",
+}
+
 _TOGO_DGB = {
     "key": "togo_dgb",
     "label_key": "source.togo_dgb.label",
@@ -147,6 +154,11 @@ CHART_METADATA = {
     # Home – Across Space
     # ------------------------------------------------------------------
     "subnational-spending": {"sources": [_BOOST]},
+    # ------------------------------------------------------------------
+    # Agriculture
+    # ------------------------------------------------------------------
+    "agriculture-spending": {"sources": [_BOOST]},
+    "agriculture-crops": {"sources": [_FAOSTAT]},
     "subnational-poverty": {"sources": [_SUBNATIONAL_POVERTY]},
     # ------------------------------------------------------------------
     # Education – Over Time
