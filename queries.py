@@ -340,6 +340,33 @@ class QueryService:
         """
         return self.fetch_data(query)
 
+    def get_togo_execution_data(self, persistent=True):
+        """Togo's budget execution by line: votes and execution stages in XOF.
+        ``persistent=False`` reads the database, bypassing the query cache."""
+        query = f"""
+            SELECT *
+            FROM prd_mega.{BOOST_SCHEMA}.tgo_execution
+        """
+        df = self.execute_query(query, persistent=persistent)
+        return self._apply_country_whitelist_filter(df)
+
+    def get_togo_execution_detail(self, year, admin2_code=None, persistent=True):
+        """One year's Togo budget lines (one ministry's when ``admin2_code`` is
+        given): votes and execution stages in XOF by imputation."""
+        conditions = [f"year = {int(year)}"]
+        if admin2_code is not None:
+            code = str(admin2_code)
+            if not code.isdigit():
+                raise ValueError(f"ministry code must be digits, got {admin2_code!r}")
+            conditions.append(f"admin2_code = '{code}'")
+        query = f"""
+            SELECT *
+            FROM prd_mega.{BOOST_SCHEMA}.tgo_execution_detail
+            WHERE {" AND ".join(conditions)}
+        """
+        df = self.execute_query(query, persistent=persistent)
+        return self._apply_country_whitelist_filter(df)
+
     def get_government_revenue_expenditure_data(self):
         source_filter = ",\n                ".join(
             f"'{src}'" for src in IMF_GOVERNMENT_REVENUE_EXPENDITURE_SOURCES

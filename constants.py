@@ -47,6 +47,10 @@ VIEW_WEO = "weo"
 #TODO: investigate which other countries have negligible subnational budgets and could be added to this list.
 COMPOSITE_VIEW_COUNTRIES = frozenset({"Togo"})
 
+# Countries with a budget execution table (boost.<iso3>_execution) and the
+# "Exécution du budget" page built on it.
+EXECUTION_VIEW_COUNTRIES = frozenset({"Togo"})
+
 
 def get_map_disclaimer(lang="en"):
     return t("disclaimer.map", lang)

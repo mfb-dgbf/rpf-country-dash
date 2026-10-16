@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 from queries import QueryService
 from components.func_operational_vs_capital_spending import prepare_prop_econ_by_func_df
+from components.togo_execution import normalise_execution
 import server_store
 
 
@@ -263,6 +264,7 @@ function_data_mapping = {
     "edu_private_expenditure": lambda: _db().get_edu_private_expenditure(),
     "togo_revenue_budget": lambda: _db().get_togo_revenue_budget_data(),
     "government_revenue_expenditure": lambda: _db().get_government_revenue_expenditure_data(),
+    "togo_execution": lambda: normalise_execution(_db().get_togo_execution_data()),
     # Transformation loaders
     "func_econ_raw": load_func_econ_raw,
     "func_by_country_year": load_func_by_country_year,
