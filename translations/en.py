@@ -72,8 +72,12 @@ TRANSLATIONS = {
 
     # --- Trace / legend names ---
     "trace.inflation_adjusted": "Inflation Adjusted",
-    "trace.central": "Central",
-    "trace.regional": "Regional",
+    # Who executes the spending (time charts)
+    "trace.central_government": "Central government",
+    "trace.subnational_governments": "Subnational governments",
+    # Where the spending goes (geographic split)
+    "trace.geo_allocated": "Geographically allocated",
+    "trace.not_geo_allocated": "Not geographically allocated",
     "trace.public_expenditure": "Public Expenditure",
     "trace.private_expenditure": "Private Expenditure",
     "trace.poverty_rate": "Poverty Rate",
@@ -84,21 +88,17 @@ TRANSLATIONS = {
     "trace.pefa_score": "PEFA Score",
     "trace.uhc_index": "Universal health coverage index",
     "trace.attendance_rate": "6-17yo attendance rate",
-    "trace.learning_poverty": "learning poverty rate",
-    "trace.inflation_adjusted_per_capita": "inflation adjusted per capita public spending",
+    "trace.learning_poverty": "Learning poverty rate",
+    "trace.inflation_adjusted_per_capita": "Inflation adjusted per capita public spending",
     "trace.inflation_adjusted_per_capita_health": "Inflation adjusted per capita public spending",
 
     # --- Hover templates ---
     "hover.real_expenditure": "Real Expenditure",
-    "hover.central": "Central",
-    "hover.regional": "Regional",
+    "hover.central_government_spending": "Central government spending",
+    "hover.subnational_government_spending": "Subnational government spending",
     "hover.inflation_adjusted_expenditure": "Inflation Adjusted Expenditure",
-    "hover.central_expenditure": "Central Expenditure",
-    "hover.regional_expenditure": "Regional Expenditure",
     "hover.inflation_adjusted_per_capita": "Inflation Adjusted Per Capita Public Spending",
     "hover.per_capita_spending": "Per Capita Public Spending",
-    "hover.real_central_expenditure": "Real Central Expenditure",
-    "hover.real_decentralized_expenditure": "Real Decentralized Expenditure",
     "hover.real_public_expenditure": "Real Public Expenditure ",
     "hover.real_private_expenditure": "Real Private Expenditure",
     "hover.func_category": "Functional Category",
@@ -213,6 +213,7 @@ TRANSLATIONS = {
     "func_sub.transport":                    "Transport",
     "func_sub.water_supply":                 "Water Supply",
     "func_sub.water_transport":              "Water Transport",
+    "func_sub.unallocated":                  "Not broken down by level",
 
     "country.Albania": {"name": "Albania", "plural": False, "feminine": False},
     "country.Bangladesh": {"name": "Bangladesh", "plural": False, "feminine": False},
@@ -255,6 +256,9 @@ TRANSLATIONS = {
 
     # --- Narrative templates: Overview ---
     "narrative.after_inflation": "After accounting for inflation, {trend_narrative} ",
+    # Close a one-segment trend sentence when the series turns within the period
+    "narrative.turning_point_peak": ", after peaking at {value} in {year}.",
+    "narrative.turning_point_low": ", after a low of {value} in {year}.",
     "narrative.decentral_mean": "On average, {mean:.1f}% of total public spending is executed by local/regional government. ",
     "narrative.decentral_latest": "In {year}, which is the latest year with data available, expenditure decentralization is {pct:.1f}%. ",
     "narrative.no_regional_data": "BOOST does not have any local/regional spending data for {country}. ",
@@ -421,10 +425,11 @@ TRANSLATIONS = {
 
     # --- Health across space ---
     "narrative.health_subnational_context": "Disparities in public health spending across regions can impact Universal Health Coverage (UHC) by creating gaps in service access and financial protection. Since primary healthcare is central to UHC, regions with lower per capita health spending may struggle to provide essential services, leading to weaker coverage in maternal health, infectious disease control, and chronic disease management. Analyzing subnational disparities in geographically allocated health spending helps assess whether resources align with UHC goals and identify regions at risk of inadequate healthcare access.",
-    "narrative.health_subnational_motivation": "To examine this for {country}, we analyze per capita public health spending in {year} as a measure of financial resource allocation at the subnational level and use the UHC index as an indicator of Universal Health Coverage.",
+    "narrative.health_subnational_motivation": "To examine this for {country}, we analyze per capita public health spending in {year} as a measure of financial resource allocation at the subnational level and use Global Data Lab's health index, based on life expectancy at birth, as an indicator of health outcomes.",
 
     # --- Subnational rank narrative ---
     "narrative.subnat_rank_year": "In {year}, {pcc}",
+    "narrative.subnat_rank_years": "Comparing {year} spending with {outcome_year} outcomes, {pcc}",
     "narrative.subnat_rank_roi": " Among the subnational regions, in terms of return on public spending {func_prep} measured by {outcome_name}, {best} had the highest return on investment (ROI) while {worst} had the lowest.",
     "label.per_capita_expenditure_on": "Per Capita Expenditure {func_prep}",
     "label.per_capita_expenditure_lower_on": "per capita expenditure {func_prep}",
@@ -529,11 +534,11 @@ TRANSLATIONS = {
 
     # --- Outcome names ---
     "outcome.school_attendance": "School Attendance for Age 6-17",
-    "outcome.uhc_index": "UHC Index",
+    "outcome.health_index": "Health Index (life expectancy)",
     # English doesn't need a separate articled form; parity with fr.py
     # so callers can always use the .narrative key without a lang check.
     "outcome.school_attendance.narrative": "school attendance for age 6-17",
-    "outcome.uhc_index.narrative": "the UHC Index",
+    "outcome.health_index.narrative": "the health index (life expectancy)",
 
     # --- Sankey rank labels ---
     "rank.1st": "1st",
@@ -577,7 +582,7 @@ TRANSLATIONS = {
     "source_name.pefa_secretariat": "PEFA Secretariat",
     "source_name.imf_gfs": "Government Finance Statistics — Statement of Operations",
     "source_name.imf_weo": "IMF World Economic Outlook",
-    "source_name.togo_dgb": "Togo Direction Générale du Budget — Rapport d'exécution du budget de l'État",
+    "source_name.togo_dgb": "Togo Direction Générale du Budget et des Finances (DGBF)",
 
     # --- Source metadata modal (descriptions) ---
     "source.poverty_rate.description": "Poverty thresholds vary by country income classification: $3.00 for Low Income, $4.20 for Lower Middle Income, and $8.30 for Upper Middle and High Income countries.",
@@ -590,9 +595,9 @@ TRANSLATIONS = {
     "source.imf_weo.label": "WEO",
     "source.imf_weo.description": "Uses values reported by the IMF for Revenue (GGR) and Expenditure (GGX) at the General Government level.",
     "source.togo_dgb.label": "Togo Official Report",
-    "source.togo_dgb.description": "Realized revenue and expenditure from the annual Budget Execution Report. Equal non-cash amounts (recette non liquide = dépenses en atténuation de recettes) are subtracted from both revenue and expenditure for comparability with IMF data.",
+    "source.togo_dgb.description": "Revenue and expenditure as published by the DGBF. When the non-cash amount (recette non liquide = dépenses en atténuation de recettes) is reported for every year, it is subtracted from both revenue and expenditure for comparability with IMF data; otherwise the amounts are shown as published. The balance is the same either way.",
     "chart.budget_execution.info": "The execution rate is actual spending as a share of the approved budget (spending ÷ approved budget). Following the PEFA framework (PI-1), execution within ±5% of the approved budget scores an A (most credible), ±10% a B, and ±15% a C; beyond that is a D. The variance view shows the same figure as the deviation from 100%. The shaded background marks these same zones — A, B and C nested around the reference line, D beyond them — and the right-hand scale names each one. The chart is always drawn from 80% to 120%, so the same distance means the same thing on every chart; a year beyond that appears as an arrow at the edge, labelled with its actual figure.",
-    "chart.revenue_expenditure_combined.info": "The composite view combines available sources on one timeline. Where an official national report is available, it takes priority; IMF GFS fills earlier historical years, and WEO projects forward. Revenue and expenditure are shown as lines in the upper panel; the balance (Revenue − Expenditure) is shown as bars in the lower panel, where positive values indicate a surplus and negative values a deficit. Single-source views display every year of data available from that source.",
+    "chart.revenue_expenditure_combined.info": "This section offers up to three views, depending on the data available for the country. Official Report: national figures as published (for Togo, the DGBF's figures). GFS: IMF Government Finance Statistics, at the Budgetary Central Government level. WEO: IMF World Economic Outlook, at the General Government level, including projections. Each view displays every year of data available from its source. Revenue and expenditure are shown as lines in the upper panel; the balance (Revenue − Expenditure) is shown as bars in the lower panel, where positive values indicate a surplus and negative values a deficit.",
 
     # --- Deficit / fiscal balance ---
     "deficit.view.label": "Data source:",
@@ -644,6 +649,7 @@ TRANSLATIONS = {
     "deficit.narrative.national": "According to {source_name}, the budget {avg_phrase} {year_phrase}.",
     "deficit.narrative.default_source": "the official report",
     "deficit.narrative.source.togo_dgb_budget_execution": "Togo DGB Budget Execution Report",
+    "deficit.narrative.source.togo_dgbf": "DGBF figures",
 
     "deficit.narrative.prefix.gfs_historical": "Based on historical GFS data",
     "deficit.narrative.prefix.gfs": "Based on GFS data",

@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pandas as pd
 
 from components.fiscal_balance import narrative
+from tests.fiscal_balance_fixture import dgbf_file_rows
 
 
 class TestFiscalBalanceNarrativeWEO(unittest.TestCase):
@@ -94,6 +95,35 @@ class TestFiscalBalanceNarrativeWEO(unittest.TestCase):
 
         self.assertIn("improved overall", text)
         self.assertIn("is expected to improve overall", text)
+
+
+class TestFiscalBalanceNarrativeOfficial(unittest.TestCase):
+    """The official view over the DGBF's file, whose years cite different documents."""
+
+    EXPECTED = {
+        "fr": "Selon les chiffres de la DGBF, le budget a enregistré un déficit moyen "
+              "de 249,88 Md XOF entre 2019 et 2025.",
+        "en": "According to DGBF figures, the budget averaged a deficit of 249.88 B XOF from 2019 to 2025.",
+        "pt": "Segundo os dados da DGBF, o orçamento teve déficit médio de 249,88 bi XOF de 2019 a 2025.",
+    }
+
+    def test_official_view_cites_the_dgbf_over_every_year(self):
+        for lang, expected in self.EXPECTED.items():
+            with self.subTest(lang=lang):
+                text = narrative(dgbf_file_rows(), None, None, "XOF",
+                                 view_mode="official", lang=lang, country="Togo")
+                self.assertEqual(text, expected)
+
+    def test_without_a_selected_view_togo_reads_the_official_sentence(self):
+        weo_df = pd.DataFrame({
+            "year": [2024, 2025, 2026],
+            "revenue": [1.2e12, 1.3e12, 1.4e12],
+            "expenditure": [1.5e12, 1.8e12, 2.1e12],
+            "is_forecast": [False, True, True],
+        })
+        text = narrative(dgbf_file_rows(), None, weo_df, "XOF",
+                         view_mode=None, lang="fr", country="Togo")
+        self.assertEqual(text, self.EXPECTED["fr"])
 
 
 if __name__ == "__main__":

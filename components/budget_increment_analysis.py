@@ -116,11 +116,13 @@ def render_fig_and_narrative(data, country, exp_type, lang="en"):
     foreign_funding_isnull = (
         overall_budget_df["domestic_funded_budget"] == overall_budget_df["budget"]
     ).all()
+    # n years of budgets hold n - 1 years of growth.
+    growth_years = end_year - updated_start_year
     func_cagr_dict = {
         func: calculate_cagr(
             group.loc[group["year"] == updated_start_year, exp_type].sum(),
             group.loc[group["year"] == end_year, exp_type].sum(),
-            updated_num_years,
+            growth_years,
         )
         for func, group in country_budget_changes_df.groupby("func")
     }
@@ -135,6 +137,9 @@ def render_fig_and_narrative(data, country, exp_type, lang="en"):
               dataset_name="Inflation adjusted domestic funded budget"),
         )
     fig = create_func_growth_figure(country_budget_changes_df, exp_type, lang=lang)
+    # A single year, or no function with a budget at both ends, has no growth.
+    if overall_label not in valid_cagr_dict or len(valid_cagr_dict) < 2:
+        return fig, t("error.data_unavailable", lang)
 
     highest_func_cat = max(
         (k for k in valid_cagr_dict if k != overall_label), key=valid_cagr_dict.get
@@ -211,7 +216,8 @@ def create_func_growth_figure(df, exp_type, lang="en"):
             dict(
                 xref="paper",
                 yref="paper",
-                x=-0.14,
+                x=0,
+                xanchor="left",
                 y=-0.2,
                 text=t("source.boost_wb", lang),
                 showarrow=False,

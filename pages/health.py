@@ -475,22 +475,22 @@ def total_health_figure(df, currency_code, lang="en"):
     )
     fig.add_trace(
         go.Bar(
-            name=t("trace.central", lang),
+            name=t("trace.central_government", lang),
             customdata=df['central_expenditure_formatted'],
             x=df.year,
             y=df.central_expenditure,
             marker_color=CENTRAL_COLOR,
-            hovertemplate="<b>" + t("hover.real_central_expenditure", lang) + "</b>: %{customdata}<extra></extra>",
+            hovertemplate="<b>" + t("hover.central_government_spending", lang) + "</b>: %{customdata}<extra></extra>",
         ),
     )
     fig.add_trace(
         go.Bar(
-            name=t("trace.regional", lang),
+            name=t("trace.subnational_governments", lang),
             customdata=df['decentralized_expenditure_formatted'],
             x=df.year,
             y=df.decentralized_expenditure,
             marker_color=REGIONAL_COLOR,
-            hovertemplate="<b>" + t("hover.real_decentralized_expenditure", lang) + "</b>: %{customdata}<extra></extra>",
+            hovertemplate="<b>" + t("hover.subnational_government_spending", lang) + "</b>: %{customdata}<extra></extra>",
         ),
     )
 
@@ -502,6 +502,8 @@ def total_health_figure(df, currency_code, lang="en"):
         title=t("chart.health_spending_over_time", lang),
         plot_bgcolor="white",
         legend=dict(orientation="h", yanchor="bottom", y=1),
+        # Room for the title above a legend that wraps to two rows.
+        margin=dict(t=140),
     )
     peak = pd.concat([df.real_expenditure, df.central_expenditure + df.decentralized_expenditure]).max()
     fig.update_yaxes(title_text=scale_currency_axes(fig, ["y"], peak, currency_code, lang))
@@ -752,6 +754,8 @@ def render_public_private_figure(private_data, public_data, country, country_dat
     fig.update_yaxes(type="category", categoryorder="category ascending")
     # Label every third year on long series to keep the axis readable.
     fig.update_yaxes(tickvals=[str(y) for y in year_ticks(merged["year"])])
+    # The shares are fractions of the year's total.
+    fig.update_xaxes(tickformat=".0%")
 
     narrative = public_private_narrative(merged, country, lang=lang)
     return apply_locale(fig, lang), narrative

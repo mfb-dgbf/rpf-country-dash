@@ -15,6 +15,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from constants import (
+    COMPOSITE_VIEW_COUNTRIES,
     WEO_SOURCE,
     GFS_SOO_SOURCE,
     VIEW_COMPOSITE,
@@ -24,7 +25,13 @@ from constants import (
 )
 from trend_narrative import InsightExtractor, TrendDetector
 from translations import t
-from utils import add_currency_column, empty_plot, format_currency, apply_locale, scale_currency_axes
+from utils import (
+    add_currency_column,
+    apply_locale,
+    empty_plot,
+    format_currency,
+    scale_currency_axes,
+)
 from viz_theme import SOLID_BLUE, WARM_BRIGHTER
 
 REVENUE_COLOR = SOLID_BLUE
@@ -66,14 +73,15 @@ def _clean_rev_exp(df):
     d = df.copy().sort_values("year")
     d["revenue"] = pd.to_numeric(d["revenue"], errors="coerce")
     d["expenditure"] = pd.to_numeric(d["expenditure"], errors="coerce")
-    if "tax_expenditure" in d.columns:
-        # Drop years where tax expenditure wasn't reported (0 is a valid value);
-        # subtract it from both sides so totals are comparable to GFS/WEO.
-        d["tax_expenditure"] = pd.to_numeric(d["tax_expenditure"], errors="coerce")
-        d = d[d["tax_expenditure"].notna()]
-        d["revenue"] = d["revenue"] - d["tax_expenditure"]
-        d["expenditure"] = d["expenditure"] - d["tax_expenditure"]
     d = d.dropna(subset=["revenue", "expenditure"])
+    if "tax_expenditure" in d.columns:
+        # Subtracted from both sides, to compare with GFS/WEO, only when every
+        # year reports it (0 is a value); otherwise every year stays as
+        # published. The balance is the same either way.
+        tax = pd.to_numeric(d["tax_expenditure"], errors="coerce")
+        if tax.notna().all():
+            d["revenue"] = d["revenue"] - tax
+            d["expenditure"] = d["expenditure"] - tax
     d = d[~((d["revenue"] == 0) & (d["expenditure"] == 0))]
     if d.empty:
         return None
@@ -85,7 +93,24 @@ def _none_if_empty(df):
     return None if df is None or df.empty else df
 
 
-def _frames_for_view(national_df, gfs_df, weo_df, view_mode=VIEW_COMPOSITE):
+def default_view(country, official_available):
+    """The view a country opens on: composite where the country is offered it,
+    else the official report when it has one, else WEO (broader year coverage
+    than GFS)."""
+    if country in COMPOSITE_VIEW_COUNTRIES:
+        return VIEW_COMPOSITE
+    if official_available:
+        return VIEW_OFFICIAL
+    return VIEW_WEO
+
+
+def _resolve_view(view_mode, national_df, country):
+    if view_mode is not None:
+        return view_mode
+    return default_view(country, _none_if_empty(national_df) is not None)
+
+
+def _frames_for_view(national_df, gfs_df, weo_df, view_mode):
     """Return view-specific frames after applying source-priority year windows."""
     national_df = _none_if_empty(national_df)
     gfs_df = _none_if_empty(gfs_df)
@@ -97,6 +122,8 @@ def _frames_for_view(national_df, gfs_df, weo_df, view_mode=VIEW_COMPOSITE):
         return None, gfs_df, None
     if view_mode == VIEW_WEO:
         return None, None, weo_df
+    if view_mode != VIEW_COMPOSITE:
+        raise ValueError(f"Unknown fiscal-balance view: {view_mode!r}")
 
     # Composite: national has priority, GFS fills pre-national years,
     # and WEO covers post-national years (or post-GFS if no national).
@@ -121,7 +148,9 @@ def _frames_for_view(national_df, gfs_df, weo_df, view_mode=VIEW_COMPOSITE):
 
 # ---- figure ----------------------------------------------------------------
 
-def combined_figure(national_df, gfs_df, weo_df, currency_code, currency_name=None, view_mode=VIEW_COMPOSITE, lang="en"):
+def combined_figure(national_df, gfs_df, weo_df, currency_code, currency_name=None, view_mode=None, lang="en", country=None):
+    """``view_mode=None`` draws the country's default view (``default_view``)."""
+    view_mode = _resolve_view(view_mode, national_df, country)
     national_df = _clean_rev_exp(national_df)
     gfs_df = _clean_rev_exp(gfs_df)
     weo_df = _clean_rev_exp(weo_df)
@@ -312,6 +341,15 @@ def combined_figure(national_df, gfs_df, weo_df, currency_code, currency_name=No
             showarrow=False,
             font=dict(size=11, color="gray"),
         )
+        # The label hangs from the top of the upper panel, so the lines keep
+        # out of that panel's top sixth.
+        lines = pd.concat([
+            df[["revenue", "expenditure"]]
+            for df in (national_df, gfs_pre, weo_post) if df is not None and not df.empty
+        ])
+        low, high = lines.min().min(), lines.max().max()
+        span = (high - low) or abs(high) or 1
+        fig.update_yaxes(range=[low - 0.05 * span, high + 0.25 * span], row=1, col=1)
 
 
     amounts = pd.concat([
@@ -394,15 +432,16 @@ def _extract_balance_insights(df):
 def _extract_national_insights(df):
     """Return ``{"year_min", "year_max", "mean_balance", "source_name"}``.
 
-    ``source_name`` is ``None`` when the frame has no ``source`` column or all
-    rows are null — the caller substitutes a localized default.
+    ``source_name`` is ``None`` when the frame has no ``source`` column, all
+    rows are null, or the rows cite different sources — the caller then
+    names the country's publisher or a localized default.
     """
     if df is None or df.empty:
         return None
     source_name = None
     if "source" in df.columns:
         sources = df["source"].dropna().unique().tolist()
-        if sources:
+        if len(sources) == 1:
             source_name = sources[0]
     return {
         "year_min": int(df["year"].min()),
@@ -492,6 +531,13 @@ _SOURCE_NAME_KEYS = {
 }
 
 
+# Publisher named for a country's official figures when its rows cite
+# different source documents.
+_OFFICIAL_PUBLISHER_KEYS = {
+    "Togo": "deficit.narrative.source.togo_dgbf",
+}
+
+
 def _localize_source(source_name, lang):
     """Translate a known database source name; pass through unknown values."""
     if not source_name:
@@ -500,11 +546,12 @@ def _localize_source(source_name, lang):
     return t(key, lang) if key else source_name
 
 
-def _national(source_name, year_min, year_max, mean_balance, currency_code, lang="en"):
-    """Build the ``'The recent official reports from {source_name} indicate ...'`` sentence."""
+def _national(source_name, year_min, year_max, mean_balance, currency_code, lang="en", country=None):
+    """Build the ``'According to {source_name}, the budget ...'`` sentence."""
     source_name = _localize_source(source_name, lang)
     if not source_name:
-        source_name = t("deficit.narrative.default_source", lang)
+        key = _OFFICIAL_PUBLISHER_KEYS.get(country, "deficit.narrative.default_source")
+        source_name = t(key, lang)
 
     if year_min == year_max:
         year_phrase = t("deficit.narrative.year_single", lang, year=year_min)
@@ -579,7 +626,9 @@ def _append_weo_periods(parts, weo_df, currency_code, lang="en", composite_mode=
         )
 
 
-def narrative(national_df, gfs_df, weo_df, currency_code, view_mode=VIEW_COMPOSITE, lang="en"):
+def narrative(national_df, gfs_df, weo_df, currency_code, view_mode=None, lang="en", country=None):
+    """``view_mode=None`` describes the country's default view (``default_view``)."""
+    view_mode = _resolve_view(view_mode, national_df, country)
     parts = []
 
     national_df = _clean_rev_exp(national_df)
@@ -594,7 +643,7 @@ def narrative(national_df, gfs_df, weo_df, currency_code, view_mode=VIEW_COMPOSI
         if nat:
             parts.append(_national(
                 nat["source_name"], nat["year_min"], nat["year_max"],
-                nat["mean_balance"], currency_code, lang=lang,
+                nat["mean_balance"], currency_code, lang=lang, country=country,
             ))
         return _finalize_parts(parts)
 
@@ -625,7 +674,7 @@ def narrative(national_df, gfs_df, weo_df, currency_code, view_mode=VIEW_COMPOSI
     if nat:
         parts.append(_national(
             nat["source_name"], nat["year_min"], nat["year_max"],
-            nat["mean_balance"], currency_code, lang=lang,
+            nat["mean_balance"], currency_code, lang=lang, country=country,
         ))
 
     _append_weo_periods(parts, weo_view, currency_code, lang=lang, composite_mode=True)

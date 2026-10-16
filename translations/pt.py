@@ -76,8 +76,12 @@ TRANSLATIONS = {
 
     # --- Trace / legend names ---
     "trace.inflation_adjusted": "Ajustado pela inflação",
-    "trace.central": "Central",
-    "trace.regional": "Regional",
+    # Who executes the spending (time charts)
+    "trace.central_government": "Governo central",
+    "trace.subnational_governments": "Governos subnacionais",
+    # Where the spending goes (geographic split)
+    "trace.geo_allocated": "Alocada geograficamente",
+    "trace.not_geo_allocated": "Não alocada geograficamente",
     "trace.public_expenditure": "Despesa pública",
     "trace.private_expenditure": "Despesa privada",
     "trace.poverty_rate": "Taxa de pobreza",
@@ -88,21 +92,17 @@ TRANSLATIONS = {
     "trace.pefa_score": "Pontuação PEFA",
     "trace.uhc_index": "Índice de cobertura universal de saúde",
     "trace.attendance_rate": "Taxa de frequência escolar de 6 a 17 anos",
-    "trace.learning_poverty": "taxa de pobreza de aprendizagem",
-    "trace.inflation_adjusted_per_capita": "despesa pública per capita ajustada pela inflação",
+    "trace.learning_poverty": "Taxa de pobreza de aprendizagem",
+    "trace.inflation_adjusted_per_capita": "Despesa pública per capita ajustada pela inflação",
     "trace.inflation_adjusted_per_capita_health": "Despesa pública per capita ajustada pela inflação",
 
     # --- Hover / axis / radio labels ---
     "hover.real_expenditure": "Despesa real",
-    "hover.central": "Central",
-    "hover.regional": "Regional",
+    "hover.central_government_spending": "Despesa do governo central",
+    "hover.subnational_government_spending": "Despesa dos governos subnacionais",
     "hover.inflation_adjusted_expenditure": "Despesa ajustada pela inflação",
-    "hover.central_expenditure": "Despesa central",
-    "hover.regional_expenditure": "Despesa regional",
     "hover.inflation_adjusted_per_capita": "Despesa pública per capita ajustada pela inflação",
     "hover.per_capita_spending": "Despesa pública per capita",
-    "hover.real_central_expenditure": "Despesa central real",
-    "hover.real_decentralized_expenditure": "Despesa descentralizada real",
     "hover.real_public_expenditure": "Despesa pública real",
     "hover.real_private_expenditure": "Despesa privada real",
     "hover.func_category": "Categoria funcional",
@@ -229,6 +229,7 @@ TRANSLATIONS = {
     "func_sub.transport": "Transporte",
     "func_sub.water_supply": "Abastecimento de água",
     "func_sub.water_transport": "Transporte aquaviário",
+    "func_sub.unallocated":                  "Sem desagregação por nível",
 
     # --- Metric names ---
     "metric.total_real_expenditure": {"name": "a despesa real total", "plural": False, "feminine": True, "article": "a"},
@@ -248,6 +249,9 @@ TRANSLATIONS = {
 
     # --- Narrative templates: overview, spending, public/private, outcomes ---
     "narrative.after_inflation": "Depois de considerar a inflação, {trend_narrative} ",
+    # Close a one-segment trend sentence when the series turns within the period
+    "narrative.turning_point_peak": ", após atingir um pico de {value} em {year}.",
+    "narrative.turning_point_low": ", após um mínimo de {value} em {year}.",
     "narrative.decentral_mean": "Em média, {mean:.1f}% da despesa pública total é executada por governos locais/regionais. ",
     "narrative.decentral_latest": "Em {year}, o ano mais recente com dados disponíveis, a descentralização da despesa é de {pct:.1f}%. ",
     "narrative.no_regional_data": "O BOOST não tem dados de despesa local/regional para {country}. ",
@@ -377,10 +381,11 @@ TRANSLATIONS = {
     "narrative.edu_subnational_context": "Como a educação primária e secundária está mais diretamente ligada à frequência escolar de crianças de 6 a 17 anos, disparidades no financiamento regional podem ter impacto maior no acesso à educação. Entender como esses recursos se traduzem em acesso à educação é essencial para avaliar se a despesa pública apoia oportunidades equitativas para as crianças.",
     "narrative.edu_subnational_motivation": "Para examinar isso em {country}, analisamos a despesa pública per capita em educação em {year} como medida de alocação de recursos financeiros no nível subnacional e usamos a taxa de frequência escolar de crianças de 6 a 17 anos como aproximação do acesso à educação.",
     "narrative.health_subnational_context": "Disparidades na despesa pública em saúde entre regiões podem afetar a cobertura universal de saúde (UHC), criando lacunas no acesso a serviços e na proteção financeira. Como a atenção primária é central para a UHC, regiões com menor despesa em saúde per capita podem ter dificuldade para oferecer serviços essenciais.",
-    "narrative.health_subnational_motivation": "Para examinar isso em {country}, analisamos a despesa pública per capita em saúde em {year} como medida de alocação de recursos financeiros no nível subnacional e usamos o índice UHC como indicador de cobertura universal de saúde.",
+    "narrative.health_subnational_motivation": "Para examinar isso em {country}, analisamos a despesa pública per capita em saúde em {year} como medida de alocação de recursos financeiros no nível subnacional e usamos o índice de saúde do Global Data Lab, baseado na expectativa de vida ao nascer, como indicador dos resultados de saúde.",
     "narrative.subnat_rank_year": "Em {year}, {pcc}",
+    "narrative.subnat_rank_years": "Comparando a despesa de {year} com os resultados de {outcome_year}, {pcc}",
     "narrative.subnat_rank_roi": " Entre as regiões subnacionais, em termos de retorno sobre a despesa pública {func_prep} medido por {outcome_name}, {best} teve o maior retorno sobre investimento (ROI), enquanto {worst} teve o menor.",
-    "label.per_capita_expenditure_on": "Despesa per capita {func_prep}",
+    "label.per_capita_expenditure_on": "Despesa per capita {sector_prep}",
     "label.per_capita_expenditure_lower_on": "a despesa per capita {func_prep}",
 
     # --- Annotations / operational vs capital ---
@@ -471,9 +476,9 @@ TRANSLATIONS = {
 
     # --- Outcome names / ranks ---
     "outcome.school_attendance": "Frequência escolar de 6 a 17 anos",
-    "outcome.uhc_index": "Índice UHC",
+    "outcome.health_index": "Índice de saúde (expectativa de vida)",
     "outcome.school_attendance.narrative": "a frequência escolar de 6 a 17 anos",
-    "outcome.uhc_index.narrative": "o índice UHC",
+    "outcome.health_index.narrative": "o índice de saúde (expectativa de vida)",
     "rank.1st": "1º",
     "rank.10th": "10º",
     "rank.20th": "20º",
@@ -509,7 +514,7 @@ TRANSLATIONS = {
     "source_name.pefa_secretariat": "Secretariado PEFA",
     "source_name.imf_gfs": "Estatísticas de Finanças Públicas do FMI - Demonstrativo de Operações",
     "source_name.imf_weo": "Perspectivas da Economia Mundial do FMI",
-    "source_name.togo_dgb": "Direção Geral do Orçamento do Togo - Relatório de execução do orçamento do Estado",
+    "source_name.togo_dgb": "Direção Geral do Orçamento e das Finanças do Togo (DGBF)",
     "source.poverty_rate.description": "As linhas de pobreza variam conforme a classificação de renda do país: US$ 3,00 para baixa renda, US$ 4,20 para renda média baixa e US$ 8,30 para renda média alta e alta renda.",
     "source.subnational_poverty.description": "As linhas de pobreza variam conforme a classificação de renda do país: US$ 3,00 para baixa renda, US$ 4,20 para renda média baixa e US$ 8,30 para renda média alta e alta renda. As taxas de pobreza subnacionais vêm do Global Subnational Atlas of Poverty (GSAP) e da Subnational Poverty and Inequality Database (SPID).",
     "source.pefa.description": "As avaliações PEFA usam notas por letras (A a D, com modificadores +). Neste painel, as notas são convertidas em pontuações numéricas (A=4, B+=3,5, B=3, C+=2,5, C=2, D+=1,5, D=1).",
@@ -520,9 +525,9 @@ TRANSLATIONS = {
     "source.imf_weo.label": "WEO",
     "source.imf_weo.description": "Usa valores reportados pelo FMI para Receita (GGR) e Despesa (GGX) no nível do Governo Geral.",
     "source.togo_dgb.label": "Relatório oficial do Togo",
-    "source.togo_dgb.description": "Receita e despesa realizadas a partir do Relatório anual de Execução Orçamentária. Valores não monetários equivalentes são subtraídos de receita e despesa para comparabilidade com os dados do FMI.",
+    "source.togo_dgb.description": "Receita e despesa conforme publicadas pela DGBF. Quando o valor não monetário (recette non liquide = dépenses en atténuation de recettes) é informado para todos os anos, ele é subtraído da receita e da despesa para comparabilidade com os dados do FMI; caso contrário, os valores são apresentados conforme publicados. O saldo é o mesmo em ambos os casos.",
     "chart.budget_execution.info": "A taxa de execução é a despesa efetiva como proporção do orçamento aprovado (despesa ÷ orçamento aprovado). Seguindo o marco PEFA (PI-1), uma execução dentro de ±5% do orçamento aprovado recebe nota A (a mais credível), ±10% nota B, e ±15% nota C; além disso, é D. A visão de variação mostra o mesmo valor como desvio em relação a 100%. O fundo sombreado indica essas mesmas zonas — A, B e C aninhadas em torno da linha de referência, D além delas —, cada uma nomeada na escala à direita. O gráfico é sempre desenhado de 80% a 120%, para que a mesma distância signifique o mesmo em todos os gráficos; um ano além disso aparece como uma seta na borda, com o seu valor real indicado.",
-    "chart.revenue_expenditure_combined.info": "A visão composta combina as fontes disponíveis em uma única linha do tempo. Quando há relatório nacional oficial disponível, ele tem prioridade; o GFS do FMI preenche anos históricos anteriores, e o WEO projeta anos futuros. Receita e despesa aparecem como linhas no painel superior; o saldo (Receita - Despesa) aparece como barras no painel inferior.",
+    "chart.revenue_expenditure_combined.info": "Esta seção oferece até três visões, conforme os dados disponíveis para o país. Relatório oficial: os números nacionais conforme publicados (para o Togo, os dados da DGBF). GFS: Estatísticas de Finanças Públicas do FMI, no nível do Governo Central Orçamentário. WEO: Perspectivas da Economia Mundial do FMI, no nível do Governo Geral, incluindo projeções. Cada visão exibe todos os anos de dados disponíveis em sua fonte. Receita e despesa aparecem como linhas no painel superior; o saldo (Receita - Despesa) aparece como barras no painel inferior, onde valores positivos indicam superávit e valores negativos, déficit.",
 
     # --- Déficit / fiscal balance ---
     "deficit.view.label": "Fonte de dados:",
@@ -567,6 +572,7 @@ TRANSLATIONS = {
     "deficit.narrative.national": "Segundo {source_name}, o orçamento {avg_phrase} {year_phrase}.",
     "deficit.narrative.default_source": "o relatório oficial",
     "deficit.narrative.source.togo_dgb_budget_execution": "Relatório de Execução Orçamentária da DGB do Togo",
+    "deficit.narrative.source.togo_dgbf": "os dados da DGBF",
     "deficit.narrative.prefix.gfs_historical": "Com base em dados históricos do GFS",
     "deficit.narrative.prefix.gfs": "Com base em dados do GFS",
     "deficit.narrative.prefix.weo": "Com base nas estimativas do WEO",

@@ -69,10 +69,11 @@ class FixedStringsTest(unittest.TestCase):
         self.assertNotIn("la UHC", context)
 
     def test_csu_on_the_rest_of_the_health_page(self):
-        self.assertIn("utilisons l'indice CSU comme indicateur",
+        # The « Répartition spatiale » tab plots Global Data Lab's health index.
+        self.assertIn("utilisons l'indice de santé de Global Data Lab, fondé sur l'espérance de vie",
                       t("narrative.health_subnational_motivation", "fr", country="Togo", year=2024))
-        self.assertEqual(t("outcome.uhc_index", "fr"), "Indice CSU")
-        self.assertEqual(t("outcome.uhc_index.narrative", "fr"), "l'indice CSU")
+        self.assertEqual(t("outcome.health_index", "fr"), "Indice de santé (espérance de vie)")
+        self.assertEqual(t("outcome.health_index.narrative", "fr"), "l'indice de santé (espérance de vie)")
         self.assertIn("CSU", t("source.health_outcome", "fr"))
         self.assertNotIn("UHC", t("source.health_outcome", "fr"))
 
@@ -97,7 +98,7 @@ class RoiNarrativeTest(unittest.TestCase):
 
         self.assertIn(
             "Parmi les régions, le retour sur investissement (ROI) des dépenses publiques de santé, "
-            "mesuré par l'indice CSU, a été le plus élevé pour la région des Plateaux et le "
+            "mesuré par l'indice de santé (espérance de vie), a été le plus élevé pour la région des Plateaux et le "
             "plus faible pour la région Maritime.",
             text,
         )
@@ -165,8 +166,8 @@ class RoiNarrativeTest(unittest.TestCase):
 
         self.assertIn(
             "Among the subnational regions, in terms of return on public spending in health measured "
-            "by the UHC Index, Plateaux had the highest return on investment (ROI) while Maritime had "
-            "the lowest.", text)
+            "by the health index (life expectancy), Plateaux had the highest return on investment (ROI) "
+            "while Maritime had the lowest.", text)
 
 if __name__ == "__main__":
     unittest.main()

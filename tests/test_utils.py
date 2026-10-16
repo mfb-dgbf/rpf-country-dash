@@ -341,10 +341,10 @@ class TestMillify(unittest.TestCase):
         # long-scale — so we use "Md" (milliard).
         self.assertEqual(millify(2_000_000_000, lang="fr"), "2,00 Md")
 
-    def test_fr_trillions_uses_bn_not_t(self):
-        # 10^12: EN "T" (trillion short-scale) becomes FR "Bn" (billion
-        # long-scale, i.e. 10^12 in French).
-        self.assertEqual(millify(3_500_000_000_000, lang="fr"), "3,50 Bn")
+    def test_fr_trillions_stay_in_milliards(self):
+        # 10^12 is written in milliards, with the thousands grouped by a
+        # narrow no-break space: "3 500,00 Md".
+        self.assertEqual(millify(3_500_000_000_000, lang="fr"), "3\u202f500,00 Md")
 
     def test_fr_small_number_has_comma_no_suffix(self):
         self.assertEqual(millify(750, lang="fr"), "750,00")
@@ -457,3 +457,20 @@ class TestScaleCurrencyAxes(unittest.TestCase):
         format_currency_yaxis(fig, "FCFA", "Dépenses totales", lang="fr", peak=2.1e9)
         self.assertEqual(fig.layout.yaxis.title.text, "Dépenses totales<br>(milliards de FCFA)")
         self.assertEqual(list(fig.data[0].y), [1.2, 1.4])
+class TestApplyLocale(unittest.TestCase):
+    """Plotly's ``separators`` is decimal mark then thousands mark."""
+
+    def test_french_groups_thousands_with_a_narrow_no_break_space(self):
+        from utils import apply_locale
+        fig = apply_locale(go.Figure(), lang="fr")
+        self.assertEqual(fig.layout.separators, ",\u202f")
+
+    def test_portuguese_groups_thousands_with_a_dot(self):
+        from utils import apply_locale
+        fig = apply_locale(go.Figure(), lang="pt")
+        self.assertEqual(fig.layout.separators, ",.")
+
+    def test_english_keeps_plotly_defaults(self):
+        from utils import apply_locale
+        fig = apply_locale(go.Figure(), lang="en")
+        self.assertIsNone(fig.layout.separators)

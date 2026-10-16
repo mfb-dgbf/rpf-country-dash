@@ -69,6 +69,12 @@ class PublicPrivateFigureTest(unittest.TestCase):
                     list(fig.layout.yaxis.tickvals), ["2011", "2014", "2017", "2020", "2023"]
                 )
 
+    def test_share_axis_reads_in_percent(self):
+        for page, prefix in ((education, "edu"), (health, "health")):
+            with self.subTest(page=page.__name__):
+                fig = self._figure(page, prefix, [2021])
+                self.assertEqual(fig.layout.xaxis.tickformat, ".0%")
+
 
 if __name__ == "__main__":
     unittest.main()

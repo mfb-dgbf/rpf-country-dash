@@ -153,6 +153,7 @@ def _generate_econ_figure(data, func, lang="en"):
         showticklabels=True,
         tickmode="array",
         tickvals=[20, 40, 60, 80, 100],
+        ticktext=[f"{v}%" for v in (20, 40, 60, 80, 100)],
     )
     fig.update_layout(
         barmode="stack",

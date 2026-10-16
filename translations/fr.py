@@ -64,7 +64,7 @@ TRANSLATIONS = {
     "chart.func_levels_spending": "Combien l'État a-t-il dépensé aux différents niveaux {func_gen} ?",
     "chart.subnational_func_spending": "Dépenses infranationales {func_gen}",
     # Use a prepositional phrase so the template works for both masculine
-    # outcomes ("Indice CSU") and feminine ones ("Fréquentation scolaire")
+    # outcomes ("Indice de santé") and feminine ones ("Fréquentation scolaire")
     # without requiring gendered adjective agreement ("infranational(e)").
     "chart.subnational_outcome": "{outcome_name} au niveau infranational",
     "chart.budget_func_fluctuation": "Comment les budgets par catégorie fonctionnelle fluctuent-ils au fil du temps ?",
@@ -75,8 +75,12 @@ TRANSLATIONS = {
 
     # --- Trace / legend names ---
     "trace.inflation_adjusted": "Ajusté à l'inflation",
-    "trace.central": "Central",
-    "trace.regional": "Régional",
+    # Who executes the spending (time charts)
+    "trace.central_government": "Administration centrale",
+    "trace.subnational_governments": "Collectivités territoriales",
+    # Where the spending goes (geographic split)
+    "trace.geo_allocated": "Allouées géographiquement",
+    "trace.not_geo_allocated": "Non allouées géographiquement",
     "trace.public_expenditure": "Dépenses publiques",
     "trace.private_expenditure": "Dépenses privées",
     "trace.poverty_rate": "Taux de pauvreté",
@@ -87,21 +91,17 @@ TRANSLATIONS = {
     "trace.pefa_score": "Score PEFA",
     "trace.uhc_index": "Indice CSU",
     "trace.attendance_rate": "Taux de fréquentation des 6-17 ans",
-    "trace.learning_poverty": "taux de pauvreté des apprentissages",
-    "trace.inflation_adjusted_per_capita": "dépenses publiques par habitant ajustées à l'inflation",
+    "trace.learning_poverty": "Taux de pauvreté des apprentissages",
+    "trace.inflation_adjusted_per_capita": "Dépenses publiques par habitant ajustées à l'inflation",
     "trace.inflation_adjusted_per_capita_health": "Dépenses publiques par habitant ajustées à l'inflation",
 
     # --- Hover templates ---
     "hover.real_expenditure": "Dépenses réelles",
-    "hover.central": "Central",
-    "hover.regional": "Régional",
+    "hover.central_government_spending": "Dépenses de l'administration centrale",
+    "hover.subnational_government_spending": "Dépenses des collectivités territoriales",
     "hover.inflation_adjusted_expenditure": "Dépenses ajustées à l'inflation",
-    "hover.central_expenditure": "Dépenses centrales",
-    "hover.regional_expenditure": "Dépenses régionales",
     "hover.inflation_adjusted_per_capita": "Dépenses publiques par habitant ajustées à l'inflation",
     "hover.per_capita_spending": "Dépenses publiques par habitant",
-    "hover.real_central_expenditure": "Dépenses centrales réelles",
-    "hover.real_decentralized_expenditure": "Dépenses décentralisées réelles",
     "hover.real_public_expenditure": "Dépenses publiques réelles ",
     "hover.real_private_expenditure": "Dépenses privées réelles",
     "hover.func_category": "Catégorie fonctionnelle",
@@ -232,6 +232,7 @@ TRANSLATIONS = {
     "func_sub.transport":                    "Transports",
     "func_sub.water_supply":                 "Approvisionnement en eau",
     "func_sub.water_transport":              "Transport maritime",
+    "func_sub.unallocated":                  "Non réparti par niveau",
 
     "country.Albania": {"name": "Albanie", "plural": False, "feminine": True},
     "country.Bangladesh": {"name": "Bangladesh", "plural": False, "feminine": False},
@@ -322,6 +323,9 @@ TRANSLATIONS = {
 
     # --- Narrative templates: Overview ---
     "narrative.after_inflation": "Après prise en compte de l'inflation, {trend_narrative} ",
+    # Close a one-segment trend sentence when the series turns within the period
+    "narrative.turning_point_peak": ", avec un point haut de {value} en {year}.",
+    "narrative.turning_point_low": ", avec un point bas de {value} en {year}.",
     "narrative.decentral_mean": "En moyenne, {mean:.1f} % des dépenses publiques totales sont exécutées par les gouvernements locaux/régionaux. ",
     "narrative.decentral_latest": "En {year}, dernière année pour laquelle des données sont disponibles, la décentralisation des dépenses est de {pct:.1f} %. ",
     "narrative.no_regional_data": "BOOST ne dispose pas de données sur les dépenses locales/régionales pour {country}. ",
@@ -508,15 +512,16 @@ TRANSLATIONS = {
 
     # --- Health across space ---
     "narrative.health_subnational_context": "Les disparités régionales dans les dépenses publiques de santé peuvent compromettre la couverture sanitaire universelle (CSU, ou UHC en anglais) en créant des écarts dans l'accès aux services et dans la protection financière. Étant donné que les soins de santé primaires sont au cœur de la CSU, les régions avec des dépenses de santé par habitant plus faibles peuvent avoir du mal à fournir des services essentiels, entraînant une couverture plus faible en santé maternelle, lutte contre les maladies infectieuses et gestion des maladies chroniques. L'analyse des disparités infranationales dans les dépenses de santé géographiquement allouées aide à évaluer si les ressources sont alignées sur les objectifs de la CSU et à identifier les régions à risque d'accès insuffisant aux soins de santé.",
-    "narrative.health_subnational_motivation": "Pour examiner cela pour {country}, nous analysons les dépenses publiques de santé par habitant en {year} comme mesure de l'allocation des ressources financières au niveau infranational et utilisons l'indice CSU comme indicateur de la couverture sanitaire universelle.",
+    "narrative.health_subnational_motivation": "Pour examiner cela pour {country}, nous analysons les dépenses publiques de santé par habitant en {year} comme mesure de l'allocation des ressources financières au niveau infranational et utilisons l'indice de santé de Global Data Lab, fondé sur l'espérance de vie à la naissance, comme indicateur des résultats sanitaires.",
 
     # --- Subnational rank narrative ---
     "narrative.subnat_rank_year": "En {year}, {pcc}",
+    "narrative.subnat_rank_years": "En rapportant les dépenses de {year} aux résultats de {outcome_year}, {pcc}",
     "narrative.subnat_rank_roi": " Parmi les régions, le retour sur investissement (ROI) des dépenses publiques {func_de}, mesuré par {outcome_name}, a été le plus élevé pour {best} et le plus faible pour {worst}.",
-    "label.per_capita_expenditure_on": "Dépenses par habitant {func_prep}",
+    "label.per_capita_expenditure_on": "Dépenses par habitant {sector_prep}",
     # Lowercase form: includes the article "les" since its only consumer
     # is mid-sentence correlation narratives ("entre les dépenses par
-    # habitant en santé et l'indice CSU"), where the bare form would
+    # habitant en santé et l'indice de santé"), where the bare form would
     # produce ungrammatical French.
     "label.per_capita_expenditure_lower_on": "les dépenses par habitant {func_prep}",
 
@@ -624,15 +629,16 @@ TRANSLATIONS = {
 
     # --- Outcome names ---
     # Bare form — for chart titles, hover labels. Stays without article so
-    # French titles like "Indice CSU au niveau infranational" read as clean labels.
+    # French titles like "Indice de santé (espérance de vie) au niveau infranational"
+    # read as clean labels.
     "outcome.school_attendance": "Fréquentation scolaire des 6-17 ans",
-    "outcome.uhc_index": "Indice CSU",
+    "outcome.health_index": "Indice de santé (espérance de vie)",
     # Narrative form — used mid-sentence after prepositions like "par" or
     # "selon" that need a definite article in French ("mesuré par l'indice
-    # CSU", "selon la fréquentation scolaire"). Falls back to the bare form
+    # de santé", "selon la fréquentation scolaire"). Falls back to the bare form
     # in English since articles aren't needed.
     "outcome.school_attendance.narrative": "la fréquentation scolaire des 6-17 ans",
-    "outcome.uhc_index.narrative": "l'indice CSU",
+    "outcome.health_index.narrative": "l'indice de santé (espérance de vie)",
 
     # --- Sankey rank labels ---
     "rank.1st": "1er",
@@ -676,7 +682,7 @@ TRANSLATIONS = {
     "source_name.pefa_secretariat": "Secrétariat PEFA",
     "source_name.imf_gfs": "Statistiques de finances publiques — État de situation des opérations",
     "source_name.imf_weo": "Perspectives de l'économie mondiale du FMI",
-    "source_name.togo_dgb": "Direction Générale du Budget du Togo — Rapport d'exécution du budget de l'État",
+    "source_name.togo_dgb": "Direction Générale du Budget et des Finances du Togo (DGBF)",
 
     # --- Source metadata modal (descriptions) ---
     "source.poverty_rate.description": "Les seuils de pauvreté varient selon la classification de revenu des pays : 3,00 $ pour les pays à faible revenu, 4,20 $ pour les pays à revenu intermédiaire (tranche inférieure) et 8,30 $ pour les pays à revenu intermédiaire (tranche supérieure) et à revenu élevé.",
@@ -689,9 +695,9 @@ TRANSLATIONS = {
     "source.imf_weo.label": "PEM",
     "source.imf_weo.description": "Utilise les valeurs publiées par le FMI pour les Recettes (GGR) et les Dépenses (GGX) au niveau des Administrations publiques.",
     "source.togo_dgb.label": "Rapport officiel du Togo",
-    "source.togo_dgb.description": "Recettes et dépenses réalisées issues du Rapport d'exécution du budget de l'État annuel. Un même montant non liquide (recette non liquide = dépenses en atténuation de recettes) est soustrait des recettes et des dépenses afin d'assurer la comparabilité avec les données du FMI.",
+    "source.togo_dgb.description": "Recettes et dépenses telles que publiées par la DGBF. Lorsque le montant non liquide (recette non liquide = dépenses en atténuation de recettes) est renseigné pour chaque année, il est soustrait des recettes et des dépenses afin d'assurer la comparabilité avec les données du FMI\u00a0; sinon, les montants sont présentés tels que publiés. Le solde est le même dans les deux cas.",
     "chart.budget_execution.info": "Le taux d'exécution correspond aux dépenses réelles rapportées au budget approuvé (dépenses ÷ budget approuvé). Selon le cadre PEFA (PI-1), une exécution à ±5 % du budget approuvé obtient la note A (la plus crédible), à ±10 % la note B, et à ±15 % la note C ; au-delà, c'est un D. La vue en écart présente la même donnée comme écart par rapport à 100 %. Le fond ombré indique ces mêmes zones — A, B et C imbriquées autour de la ligne de référence, D au-delà —, chacune nommée sur l'échelle de droite. Le graphique est toujours tracé de 80 % à 120 %, afin qu'une même distance ait partout le même sens ; une année au-delà apparaît sous forme de flèche au bord, accompagnée de sa valeur réelle.",
-    "chart.revenue_expenditure_combined.info": "La vue composite combine les sources disponibles sur une même chronologie. Lorsqu'un rapport national officiel est disponible, il est utilisé en priorité ; les SFP du FMI complètent les années historiques antérieures, et les PEM fournissent les projections. Les recettes et dépenses sont représentées par des courbes dans le panneau supérieur ; le solde (Recettes − Dépenses) apparaît sous forme de barres dans le panneau inférieur, où les valeurs positives indiquent un excédent et les valeurs négatives un déficit. Les vues à source unique affichent toutes les années de données disponibles pour cette source.",
+    "chart.revenue_expenditure_combined.info": "Cette section propose jusqu'à trois vues, selon les données disponibles pour le pays. Rapport officiel\u00a0: les chiffres nationaux tels que publiés (pour le Togo, ceux de la DGBF). SFP\u00a0: les Statistiques de finances publiques du FMI, au niveau de l'Administration centrale budgétaire. PEM\u00a0: les Perspectives de l'économie mondiale du FMI, au niveau des Administrations publiques, projections comprises. Chaque vue affiche toutes les années de données disponibles pour sa source. Les recettes et dépenses sont représentées par des courbes dans le panneau supérieur\u00a0; le solde (Recettes − Dépenses) apparaît sous forme de barres dans le panneau inférieur, où les valeurs positives indiquent un excédent et les valeurs négatives un déficit.",
 
     # --- Deficit / solde budgétaire ---
     "deficit.view.label": "Source des données :",
@@ -747,6 +753,7 @@ TRANSLATIONS = {
     "deficit.narrative.national": "Selon {source_name}, le budget {avg_phrase} {year_phrase}.",
     "deficit.narrative.default_source": "le rapport officiel",
     "deficit.narrative.source.togo_dgb_budget_execution": "le Rapport d'exécution du budget de l'État",
+    "deficit.narrative.source.togo_dgbf": "les chiffres de la DGBF",
 
     "deficit.narrative.prefix.gfs_historical": "D'après les données historiques des SFP",
     "deficit.narrative.prefix.gfs": "D'après les données des SFP",

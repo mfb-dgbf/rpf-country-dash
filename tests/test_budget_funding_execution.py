@@ -451,6 +451,27 @@ class TestExecutionIntegration(unittest.TestCase):
         )
 
     @patch("components.budget_funding_execution.server_store.get")
+    def test_year_labels_clear_the_figure_under_a_low_arrow(self, mock_get):
+        # A year below the window writes its figure under its arrow, past the
+        # bottom of the plot, where the year labels start.
+        mock_get.side_effect = _store(
+            national=self._budget_expenditure("Ghana", [2018, 2019], [59.0, 45.0])
+        )
+        fig = budget_funding_execution.render_execution_figure("Ghana", "en")
+        # Invisible outside ticks push the year labels down past the figure.
+        self.assertEqual(fig.layout.xaxis.ticks, "outside")
+        self.assertGreaterEqual(fig.layout.xaxis.ticklen, 14)
+        self.assertEqual(fig.layout.xaxis.tickcolor, "rgba(0,0,0,0)")
+
+    @patch("components.budget_funding_execution.server_store.get")
+    def test_year_labels_stay_put_without_a_low_arrow(self, mock_get):
+        mock_get.side_effect = _store(
+            national=self._budget_expenditure("Ghana", [2018, 2019], [99.0, 300.0])
+        )
+        fig = budget_funding_execution.render_execution_figure("Ghana", "en")
+        self.assertIsNone(fig.layout.xaxis.ticklen)
+
+    @patch("components.budget_funding_execution.server_store.get")
     def test_every_off_scale_year_parks_at_the_same_spot(self, mock_get):
         # A near miss and a wild one, on each side.
         mock_get.side_effect = _store(

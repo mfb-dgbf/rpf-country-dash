@@ -17,6 +17,7 @@ import server_store
 from utils import (
     add_currency_column,
     add_disputed_overlay,
+    apply_amount_colorbar,
     apply_locale,
     empty_plot,
     filter_country_sort_year,
@@ -40,7 +41,9 @@ def update_year_slider(data, country, func, lang="en"):
         return {"display": "block"}, {}, 0, 0, 0, {}
 
     expenditure_years = list(data.year.astype("int").unique())
-    data = data[data["outcome_index"].notna()]
+    # A year has an outcome only when it was measured that year, not paired
+    # from an earlier one.
+    data = data[_outcome_years(data) == data["year"]]
     outcome_years = list(data.year.astype("int").unique())
     return get_slider_config(expenditure_years, outcome_years, lang=lang)
 
@@ -69,8 +72,14 @@ def render_func_subnat_overview(func_econ_data, sub_func_data, country, selected
             t("error.data_unavailable", lang),
         )
 
+    sector_total = None
+    if not data_by_func_admin0.empty:
+        sector_total = (
+            data_by_func_admin0["expenditure"].sum(),
+            data_by_func_admin0["real_expenditure"].sum(),
+        )
     fig1 = _central_vs_regional_fig(data_by_func_sub_geo0, func, currency_code, lang=lang)
-    fig2 = _sub_func_fig(data_by_func_sub_geo0, func, currency_code, lang=lang)
+    fig2 = _sub_func_fig(data_by_func_sub_geo0, func, currency_code, lang=lang, sector_total=sector_total)
 
     narrative = _sub_func_narrative(
         data_by_func_admin0, data_by_func_sub_geo0, country, selected_year, func, lang=lang
@@ -82,19 +91,51 @@ def _subset_data(df, year, country, func):
     return data.loc[(data.func == func) & (data.year == year)]
 
 
-def _outcome_display_year(country, func, selected_year):
-    """Latest year <= selected_year with subnational outcome data for this
-    country/func, or None. Shared by both across-space maps so the outcome map
-    picks its (possibly carried-forward) render year and the spending map can
-    tell when its selected year differs from it — labelling both only then."""
+def _outcome_years(data):
+    """The year each row's outcome was measured, NaN where it has none.
+
+    The table pairs each spending year with the latest outcome at or before
+    it and says which in ``outcome_year``; without that column an outcome is
+    only ever the spending year's own.
+    """
+    measured = data["outcome_year"].fillna(data["year"]) if "outcome_year" in data else data["year"]
+    return measured.where(data["outcome_index"].notna())
+
+
+def _years_text(years):
+    return ", ".join(str(int(y)) for y in sorted(set(years)))
+
+
+def _outcome_display(country, func, selected_year):
+    """(rows_year, outcome_years) for the across-space outcome charts, or None.
+
+    ``rows_year`` is the latest spending year <= selected_year whose regions
+    carry an outcome, and ``outcome_years`` the years those outcomes were
+    measured. Both maps label their year when the outcome years differ from
+    the selected year.
+    """
     data = server_store.lookup("geo1_func_expenditure")
     if data is None:
         return None
     data = filter_country_sort_year(data, country)
     data = data[(data.func == func) & (data.adm1_name != "Central Scope")]
-    data = data.dropna(subset=["outcome_index"])
-    years = [y for y in sorted(data.year.unique()) if y <= selected_year]
-    return years[-1] if years else None
+    data = data.assign(measured=_outcome_years(data)).dropna(subset=["measured"])
+    data = data[data.year <= selected_year]
+    if data.empty:
+        return None
+    rows_year = data.year.max()
+    return rows_year, sorted(set(data.loc[data.year == rows_year, "measured"].astype(int)))
+
+
+# geo0 says where spending goes: "Regional" is allocated to a region,
+# "Central" is not. Other values pass through untranslated.
+_GEO0_KEYS = {"Central": "trace.not_geo_allocated", "Regional": "trace.geo_allocated"}
+
+
+def _geo0_label(geo0, lang):
+    key = _GEO0_KEYS.get(geo0)
+    return t(key, lang) if key else geo0
+
 
 def _central_vs_regional_fig(data, func, currency_code, lang="en"):
     func_lower = t(f"sector.{func.lower()}", lang)
@@ -110,13 +151,7 @@ def _central_vs_regional_fig(data, func, currency_code, lang="en"):
         return empty_plot(t("error.no_data_period", lang), fig_title)
 
     add_currency_column(central_vs_regional, 'real_expenditure', currency_code, lang=lang)
-    # Translate the slice labels: "Central" → "Central" (same in FR),
-    # "Regional" → "Régional". Unknown values pass through unchanged.
-    geo0_key_map = {"Central": "trace.central", "Regional": "trace.regional"}
-    pie_labels = [
-        t(geo0_key_map[g], lang) if g in geo0_key_map else g
-        for g in central_vs_regional["geo0"]
-    ]
+    pie_labels = [_geo0_label(g, lang) for g in central_vs_regional["geo0"]]
     fig = go.Figure(
         data=[
             go.Pie(
@@ -124,9 +159,10 @@ def _central_vs_regional_fig(data, func, currency_code, lang="en"):
                 values=central_vs_regional["real_expenditure"],
                 hole=0.5,
                 marker=dict(colors=[CENTRAL_COLOR, REGIONAL_COLOR]),
+                texttemplate="%{percent:.1%}",
                 customdata=np.stack(central_vs_regional["real_expenditure_formatted"]),
-                hovertemplate="<b>" + t("hover.real_expenditure", lang) + "</b>: %{customdata}<br>"
-                + "<extra></extra>",
+                hovertemplate="<b>%{label}</b><br>" + t("hover.real_expenditure", lang)
+                + ": %{customdata}<extra></extra>",
             )
         ]
     )
@@ -138,7 +174,23 @@ def _central_vs_regional_fig(data, func, currency_code, lang="en"):
     return apply_locale(fig, lang)
 
 
-def _sub_func_fig(data, func, currency_code, lang="en"):
+# The treemap box of the sector's spending that has no sub-function.
+UNALLOCATED_ID = "Not broken down by level"
+UNALLOCATED_COLOR = "#BDBDBD"
+# Smallest label size drawn; a box too small for it shows its label on hover.
+TREEMAP_MIN_TEXT_SIZE = 11
+# Height (px) of a sub-function's header: two lines of label.
+TREEMAP_HEADER_HEIGHT = 40
+
+
+def _sub_func_fig(data, func, currency_code, lang="en", sector_total=None):
+    """Treemap of the sector's spending by sub-function, each split by geo0.
+
+    ``sector_total`` is the sector's (expenditure, real_expenditure) for the
+    year; without it, the sum of ``data``, which also holds the rows without
+    a sub-function. What the sub-functions leave of it is a box of its own,
+    so the boxes add up to the sector and the shares are shares of it.
+    """
     func_lower = t(f"sector.{func.lower()}", lang)
     func_meta = t(f"sector.{func.lower()}", lang, meta=True)
     fig_title = t(
@@ -151,7 +203,9 @@ def _sub_func_fig(data, func, currency_code, lang="en"):
         return empty_plot(t("error.no_data_period", lang), fig_title)
 
     fig = go.Figure()
-    total = data.expenditure.sum()
+    if sector_total is None:
+        sector_total = (data.expenditure.sum(), data.real_expenditure.sum())
+    total, real_total = sector_total
     ids = []
     parents = []
     labels = []
@@ -177,13 +231,22 @@ def _sub_func_fig(data, func, currency_code, lang="en"):
         hover_texts.append(f"{t('hover.real_expenditure', lang)}: {format_currency(row.real_expenditure, currency_code, lang=lang)}")
         colors.append(base_color)
 
+    unallocated = total - education_values.expenditure.sum()
+    if unallocated > abs(total) * 1e-6:
+        ids.append(UNALLOCATED_ID)
+        parents.append("")
+        labels.append(
+            f"{t('func_sub.unallocated', lang)}<br>{format_currency(unallocated, currency_code, lang=lang)}"
+            f" ({unallocated / total * 100:.0f}%)"
+        )
+        values.append(unallocated)
+        real_unallocated = real_total - education_values.real_expenditure.sum()
+        hover_texts.append(f"{t('hover.real_expenditure', lang)}: {format_currency(real_unallocated, currency_code, lang=lang)}")
+        colors.append(UNALLOCATED_COLOR)
+
     data_grouped = (
         data.groupby(["func_sub", "geo0"], sort=False).sum(numeric_only=True).reset_index()
     )
-
-    # Maps raw geo0 data values ("Central" / "Regional") to their
-    # translation keys. Other values fall through untranslated.
-    geo0_key_map = {"Central": "trace.central", "Regional": "trace.regional"}
 
     for _, row in data_grouped.iterrows():
         parent = row["func_sub"]
@@ -193,8 +256,7 @@ def _sub_func_fig(data, func, currency_code, lang="en"):
         ids.append(f"{row['func_sub']} - {row['geo0']}")
         parents.append(parent)
         values.append(row["expenditure"])
-        geo0_key = geo0_key_map.get(row["geo0"])
-        geo0_label = t(geo0_key, lang) if geo0_key else row["geo0"]
+        geo0_label = _geo0_label(row["geo0"], lang)
         labels.append(f"{geo0_label}<br>{format_currency(row['expenditure'], currency_code, lang=lang)} ({percent_of_parent:.0f}%)")
         hover_texts.append(f"{t('hover.real_expenditure', lang)}: {format_currency(row['real_expenditure'], currency_code, lang=lang)}")
         base_color = parent_colors[parent]
@@ -211,9 +273,10 @@ def _sub_func_fig(data, func, currency_code, lang="en"):
             values=values,
             branchvalues="total",
             textinfo="label",
+            textfont=dict(size=14),
             hovertemplate="<b>%{label}</b><br>%{customdata}<extra></extra>",
             customdata=hover_texts,
-            marker=dict(colors=colors),
+            marker=dict(colors=colors, pad=dict(t=TREEMAP_HEADER_HEIGHT, l=4, r=4, b=4)),
         )
     )
 
@@ -222,6 +285,7 @@ def _sub_func_fig(data, func, currency_code, lang="en"):
         plot_bgcolor="white",
         title=fig_title,
         margin=dict(l=15, r=15, b=15),
+        uniformtext=dict(minsize=TREEMAP_MIN_TEXT_SIZE, mode="hide"),
     )
 
     return apply_locale(fig, lang)
@@ -375,18 +439,20 @@ def update_func_expenditure_map(
     # Spending always shows the selected year, so its year note is only useful when
     # the outcome map is showing a different (carried-forward) year — then both maps
     # label their year. The source note always shows.
-    outcome_year = _outcome_display_year(country, func, year)
+    display = _outcome_display(country, func, year)
     notes = []
-    if outcome_year is not None and outcome_year != year:
+    if display is not None and display[1] != [year]:
         notes.append(t("annotation.displaying_data_from", lang, year=year))
     notes.append(t("source.boost_database", lang))
 
+    # English titles take the capitalised COFOG name ("Subnational Education
+    # Spending"); French and Portuguese the lowercase sector after "de".
     cofog_name = t(f"cofog.{func.lower()}", lang)
-    cofog_meta = t(f"cofog.{func.lower()}", lang, meta=True)
+    sector_meta = t(f"sector.{func.lower()}", lang, meta=True)
     fig.update_layout(
         title=t(
             "chart.subnational_func_spending", lang,
-            func=cofog_name, func_gen=genitive(lang, cofog_meta),
+            func=cofog_name, func_gen=genitive(lang, sector_meta),
         ),
         plot_bgcolor="white",
         coloraxis_colorbar=dict(
@@ -408,6 +474,7 @@ def update_func_expenditure_map(
             for i, note in enumerate(notes)
         ],
     )
+    apply_amount_colorbar(fig, lang)
 
     return apply_locale(fig, lang)
 
@@ -418,7 +485,7 @@ FUNC_OUTCOME_MAP = {
         lambda value: f"{value:.1f}%",
     ],
     'Health': [
-        'UHC Index',
+        'Health Index',
         lambda value: value,
         lambda value: f"{value:.2f}",
     ],
@@ -426,7 +493,7 @@ FUNC_OUTCOME_MAP = {
 
 FUNC_OUTCOME_KEY_MAP = {
     'Education': 'outcome.school_attendance',
-    'Health': 'outcome.uhc_index',
+    'Health': 'outcome.health_index',
 }
 
 def update_hd_index_map(
@@ -446,10 +513,11 @@ def update_hd_index_map(
     all_data = filter_country_sort_year(all_data, country)
     all_data = all_data[(all_data.func == func) & (all_data.adm1_name != 'Central Scope')]
 
-    display_year = _outcome_display_year(country, func, year)
-    if display_year is None:
+    display = _outcome_display(country, func, year)
+    if display is None:
         return empty_plot(t("error.no_outcome_data", lang))
-    df = all_data[all_data.year == display_year].copy()
+    rows_year, outcome_years = display
+    df = all_data[all_data.year == rows_year].copy()
 
     if df.empty:
         return empty_plot(t("error.no_data_year", lang))
@@ -527,8 +595,8 @@ def update_hd_index_map(
     # The carried-forward data-year note shows only when the outcome displayed is
     # from an earlier year than the one selected; the source note always shows.
     notes = []
-    if display_year != year:
-        notes.append(t("annotation.displaying_data_from", lang, year=display_year))
+    if outcome_years != [year]:
+        notes.append(t("annotation.displaying_data_from", lang, year=_years_text(outcome_years)))
     notes.append(t("source.undp_gdl", lang))
 
     fig.update_layout(
@@ -555,6 +623,9 @@ def update_hd_index_map(
     )
 
     return apply_locale(fig, lang)
+
+
+SANKEY_NODE_THICKNESS = 20
 
 
 def render_func_subnat_rank(subnational_data, country, base_year, func, currency_code, lang="en"):
@@ -611,16 +682,17 @@ def render_func_subnat_rank(subnational_data, country, base_year, func, currency
     node_colors_opaque = [add_opacity(color, 0.7) for color in node_colors]
     node_colors += [node_colors[source.index(dest[i])] for i in range(n)]
 
+    node_x = (0.1, 0.9)
     fig = go.Figure()
     fig.add_trace(
         go.Sankey(
             node=dict(
-                thickness=20,
+                thickness=SANKEY_NODE_THICKNESS,
                 line=dict(color="black", width=0.2),
-                label=list(source) + [name + "-" for name in list(dest)],
+                label=list(source) + list(dest),
                 y=[(i + 1) / (n + 1) for i in range(n)]
                 + [(i + 1) / (n + 1) for i in range(n)],
-                x=[0.1 for i in range(n)] + [0.9 for i in range(n)],
+                x=[node_x[0] for i in range(n)] + [node_x[1] for i in range(n)],
                 color=node_colors,
                 customdata=node_custom_data,
                 hovertemplate="%{customdata[1]}:  %{customdata[0]}<extra></extra>",
@@ -634,37 +706,52 @@ def render_func_subnat_rank(subnational_data, country, base_year, func, currency
                 + f"<b>{outcome_name}:</b> " + "%{target.customdata[0]}<br>"
                 + "<extra></extra>",
             ),
+            textfont=dict(size=13),
         )
     )
 
+    # English labels take the capitalised COFOG name ("in Health"); French and
+    # Portuguese the lowercase sector ("en santé", "na saúde").
     cofog_meta = _LANGUAGES[lang].get(f"cofog.{func.lower()}")
-    per_capita_label = t("label.per_capita_expenditure_on", lang, func_prep=preposition(lang, cofog_meta))
+    sector_meta = _LANGUAGES[lang].get(f"sector.{func.lower()}")
+    per_capita_label = t(
+        "label.per_capita_expenditure_on", lang,
+        func_prep=preposition(lang, cofog_meta), sector_prep=preposition(lang, sector_meta),
+    )
     fig.add_annotation(
         x=0.1,
         y=1,
         arrowcolor="rgba(0, 0, 0, 0)",
         text=f"<b>{per_capita_label}</b><br> <b>{base_year}</b>",
     )
+    outcome_years = _years_text(_outcome_years(data).dropna())
     fig.add_annotation(
         x=0.9,
         y=1,
         arrowcolor="rgba(0, 0, 0, 0)",
-        text=f"<b>{outcome_name}</b> <br> <b>{base_year}</b>",
+        text=f"<b>{outcome_name}</b> <br> <b>{outcome_years}</b>",
     )
 
     rank_keys = {0: "rank.1st", 10: "rank.10th", 20: "rank.20th", 30: "rank.30th", 40: "rank.40th"}
     for i in range(0, n + 1, 10):
         rank_key = rank_keys.get(i)
         if rank_key:
+            # Right-aligned against the first column of nodes, clear of
+            # their half-thickness (node x is a node's centre).
             fig.add_annotation(
+                xref="paper",
+                yref="paper",
                 y=1 - ((i + 1) / (n + 1)),
-                x=0.075,
+                x=node_x[0],
+                xanchor="right",
+                xshift=-(SANKEY_NODE_THICKNESS // 2 + 4),
                 yshift=10,
                 text=f"<b>{t(rank_key, lang)}</b>",
                 showarrow=False,
             )
 
-    narrative = _func_subnat_rank_narrative(base_year, func, data, country, lang=lang)
+    narrative = _func_subnat_rank_narrative(base_year, func, data, country, lang=lang,
+                                            outcome_years=outcome_years)
     return apply_locale(fig, lang), narrative
 
 
@@ -674,7 +761,7 @@ def _region_phrase(lang, country, region):
     return _LANGUAGES[lang].get(f"region.{country}.{region}", region)
 
 
-def _func_subnat_rank_narrative(year, func, data, country, lang="en"):
+def _func_subnat_rank_narrative(year, func, data, country, lang="en", outcome_years=None):
     func_lower = t(f"sector.{func.lower()}", lang)
     func_meta = _LANGUAGES[lang].get(f"sector.{func.lower()}")
 
@@ -683,7 +770,7 @@ def _func_subnat_rank_narrative(year, func, data, country, lang="en"):
     outcome_name_lower = re.sub(r'\buhc\b', 'UHC', outcome_name.lower(), flags=re.IGNORECASE)
 
     # For the correlation narrative, pass articled display names so the
-    # generated French reads "entre les dépenses... et l'indice CSU..."
+    # generated French reads "entre les dépenses... et l'indice de santé..."
     # rather than the ungrammatical bare-noun concatenation.
     outcome_display = (
         t(f"{outcome_name_key}.narrative", lang)
@@ -702,14 +789,17 @@ def _func_subnat_rank_narrative(year, func, data, country, lang="en"):
         lang=lang,
     )
 
-    narrative = t("narrative.subnat_rank_year", lang, year=year, pcc=PCC)
+    if outcome_years is None or outcome_years == str(year):
+        narrative = t("narrative.subnat_rank_year", lang, year=year, pcc=PCC)
+    else:
+        narrative = t("narrative.subnat_rank_years", lang, year=year, outcome_year=outcome_years, pcc=PCC)
     data["ROI"] = data.outcome_index / data.per_capita_expenditure
     best_ROI = data[data["ROI"] == data.ROI.max()].adm1_name.values[0]
     worst_ROI = data[data["ROI"] == data.ROI.min()].adm1_name.values[0]
 
     # Use the .narrative form (with definite article in French) for
-    # mid-sentence interpolation — "mesuré par l'indice CSU" not
-    # "mesuré par indice CSU".
+    # mid-sentence interpolation — "mesuré par l'indice de santé" not
+    # "mesuré par indice de santé".
     outcome_narrative = (
         t(f"{outcome_name_key}.narrative", lang)
         if outcome_name_key else outcome_name_lower

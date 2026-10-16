@@ -9,6 +9,7 @@ from plotly.subplots import make_subplots
 import numpy as np
 from utils import (
     add_currency_column,
+    apply_amount_colorbar,
     apply_locale,
     filter_country_sort_year,
     format_year_axis,
@@ -374,15 +375,12 @@ def render_overview_content(tab, lang):
                                     html_for="revenue-expenditure-view",
                                     className="mb-0",
                                 ),
+                                # Filled with the country's views and default
+                                # by update_revenue_expenditure_view_options.
                                 dbc.RadioItems(
                                     id="revenue-expenditure-view",
-                                    options=[
-                                        {"label": t("deficit.view.composite", lang), "value": VIEW_COMPOSITE},
-                                        {"label": t("deficit.view.official", lang), "value": VIEW_OFFICIAL},
-                                        {"label": t("deficit.view.gfs", lang), "value": VIEW_GFS},
-                                        {"label": t("deficit.view.weo", lang), "value": VIEW_WEO},
-                                    ],
-                                    value=VIEW_COMPOSITE,
+                                    options=[],
+                                    value=None,
                                     inline=True,
                                 ),
                             ],
@@ -553,22 +551,22 @@ def total_figure(df, currency_name, currency_code, lang="en"):
     )
     fig.add_trace(
         go.Bar(
-            name=t("trace.central", lang),
+            name=t("trace.central_government", lang),
             x=df.year,
             y=df.expenditure - df.decentralized_expenditure,
             marker_color=CENTRAL_COLOR,
             customdata=np.column_stack([df['central_expenditure_formatted']]),
-            hovertemplate=t("hover.central_expenditure", lang) + ": %{customdata[0]}<extra></extra>",
+            hovertemplate=t("hover.central_government_spending", lang) + ": %{customdata[0]}<extra></extra>",
         )
     )
     fig.add_trace(
         go.Bar(
-            name=t("trace.regional", lang),
+            name=t("trace.subnational_governments", lang),
             x=df.year,
             y=df.decentralized_expenditure,
             marker_color=REGIONAL_COLOR,
             customdata=np.column_stack([df['decentralized_expenditure_formatted']]),
-            hovertemplate=t("hover.regional_expenditure", lang) + ": %{customdata[0]}<extra></extra>",
+            hovertemplate=t("hover.subnational_government_spending", lang) + ": %{customdata[0]}<extra></extra>",
         )
     )
 
@@ -578,6 +576,8 @@ def total_figure(df, currency_name, currency_code, lang="en"):
         plot_bgcolor="white",
         legend=dict(orientation="h", yanchor="bottom", y=1.03),
         hovermode="x unified",
+        # Room for the title above a legend that wraps to two rows.
+        margin=dict(t=140),
     )
     format_currency_yaxis(
         fig, currency_name, t("axis.total_expenditure", lang), lang=lang,
@@ -711,7 +711,7 @@ def functional_figure(df, lang="en"):
         )
 
     format_year_axis(fig)
-    fig.update_yaxes(fixedrange=True)
+    fig.update_yaxes(fixedrange=True, ticksuffix="%")
     fig.update_layout(
         barmode="stack",
         title=t("chart.sector_prioritization", lang),
@@ -928,6 +928,7 @@ def regional_spending_choropleth(geojson, disputed_geojson, df, zmin, zmax, lat,
         ),
         legend=dict(orientation="h", x=1.02, y=1, xanchor="left", yanchor="top"),
     )
+    apply_amount_colorbar(fig, lang)
     fig.data[0].hovertemplate = (
         "<b>" + t("hover.region", lang) + ":</b> %{location}<br>"
         "<b>" + t("hover.expenditure_label", lang) + ":</b> %{z}<extra></extra>"
@@ -991,6 +992,7 @@ def regional_percapita_spending_choropleth(geojson, disputed_geojson, df, zmin, 
             thickness=10,
         ),
     )
+    apply_amount_colorbar(fig, lang)
     fig.data[0].hovertemplate = (
         "<b>" + t("hover.region", lang) + ":</b> %{location}<br>"
         + f"<b>{per_capita_label}:</b> %{{customdata[0]}}<extra></extra>"
@@ -1247,7 +1249,7 @@ def economic_figure(df, currency_code, lang="en"):
         )
 
     format_year_axis(fig)
-    fig.update_yaxes(fixedrange=True)
+    fig.update_yaxes(fixedrange=True, ticksuffix="%")
     fig.update_layout(
         barmode="stack",
         title=t("chart.econ_category_spending", lang),
@@ -1605,8 +1607,8 @@ def render_execution_narrative(data, country, lang):
 
 def _get_revenue_budget_context(country):
     """Load country-scoped fiscal-balance inputs from server store."""
-    # end_year=None keeps the IMF WEO forecast tail, which runs past END_YEAR and
-    # is the point of the composite view; every other chart stops at the ceiling.
+    # end_year=None keeps the years past END_YEAR: the IMF WEO forecast tail and
+    # any later official figures. Every other chart stops at the ceiling.
     national_df = filter_country_sort_year(
         server_store.get("togo_revenue_budget"), country, end_year=None
     )
@@ -1629,8 +1631,8 @@ def _get_revenue_budget_context(country):
 def update_revenue_expenditure_view_options(country, lang, revenue_data, current_view):
     lang = lang or "en"
 
-    # Official needs a national report; composite needs GFS/WEO to be comparable,
-    # which only holds where subnational activity is negligible (Togo, not e.g. Colombia).
+    # Official needs a national report; composite is offered only to
+    # COMPOSITE_VIEW_COUNTRIES (see constants.py).
     official_available = False
     if country and revenue_data:
         national_df, _, _, _ = _get_revenue_budget_context(country)
@@ -1651,14 +1653,7 @@ def update_revenue_expenditure_view_options(country, lang, revenue_data, current
     options.append({"label": t("deficit.view.gfs", lang), "value": VIEW_GFS})
     options.append({"label": t("deficit.view.weo", lang), "value": VIEW_WEO})
 
-    # Default to the richest available view: composite, else official, else WEO
-    # (WEO has broader year coverage than GFS).
-    if composite_available:
-        default_view = VIEW_COMPOSITE
-    elif official_available:
-        default_view = VIEW_OFFICIAL
-    else:
-        default_view = VIEW_WEO
+    default_view = fiscal_balance.default_view(country, official_available)
 
     # Reset on country switch; otherwise keep the current view if still valid.
     if ctx.triggered_id == "country-select" or current_view not in available:
@@ -1691,8 +1686,9 @@ def render_revenue_expenditure_combined(revenue_data, gov_data, country, country
             lang=lang or "en",
             currency_code=basic_info["currency_code"],
         ),
-        view_mode=view_mode or VIEW_COMPOSITE,
+        view_mode=view_mode,
         lang=lang or "en",
+        country=country,
     )
 
 
@@ -1712,6 +1708,7 @@ def render_revenue_expenditure_narrative(revenue_data, gov_data, country, countr
     national_df, gfs_df, weo_df, basic_info = _get_revenue_budget_context(country)
     return fiscal_balance.narrative(
         national_df, gfs_df, weo_df, basic_info["currency_code"],
-        view_mode=view_mode or VIEW_COMPOSITE,
+        view_mode=view_mode,
         lang=lang or "en",
+        country=country,
     )

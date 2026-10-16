@@ -37,6 +37,10 @@ PEFA_A_BAND = (95, 105)  # also the narrative's credible/not-credible cutoff
 # far enough out to read as off the chart, not a near miss.
 PEFA_PLOT_RANGE = (80, 120)
 PEFA_OFF_SCALE_GUTTER = 6
+# A year below the window writes its figure under its arrow, past the bottom
+# of the plot; this much space (px) between the axis and the year labels
+# keeps the two apart.
+PEFA_LOW_LABEL_ROOM = 16
 
 # (letter, band, tint), widest first — the drawing order the nesting needs, and
 # the source of both the shading and the axis letters. Tints are the PEFA tier
@@ -482,6 +486,11 @@ def create_execution_figure(df, lang="en", metric="execution_rate"):
         _marks_trace(df["year"], values, pinned, off_scale, above),
     ]
 
+    xaxis = dict(tickformat="d", dtick=1)
+    if (values < zone_low).any():
+        # Invisible outside ticks are the space between axis and year labels.
+        xaxis.update(ticks="outside", ticklen=PEFA_LOW_LABEL_ROOM, tickcolor="rgba(0,0,0,0)")
+
     shapes, ticks = _zone_shapes_and_ticks(offset)
     shapes.append(
         dict(
@@ -501,7 +510,7 @@ def create_execution_figure(df, lang="en", metric="execution_rate"):
             # No legend: the right-hand axis names the zones where they are.
             showlegend=False,
             shapes=shapes,
-            xaxis=dict(tickformat="d", dtick=1),
+            xaxis=xaxis,
             yaxis=dict(
                 title_text=axis,
                 ticksuffix="%",

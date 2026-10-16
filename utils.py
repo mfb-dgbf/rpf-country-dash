@@ -152,39 +152,143 @@ def filter_country_sort_year(df, country, start_year=START_YEAR, end_year=END_YE
 
 # Magnitude suffixes per language.
 #   EN: the standard K / M / B / T short-scale abbreviations.
-#   FR: French long-scale conventions — "Md" for milliard (10^9) and "Bn"
-#   for billion (10^12, which is *not* the same as EN "B" = 10^9). Lower-
-#   case "k" matches French typography ("100 k€") but upper-case "K" is
-#   also accepted; sticking to lowercase for correctness.
+#   FR: lowercase "k" as in French typography ("100 k€"), then "M" and "Md"
+#   (milliard, 10^9). Larger amounts stay in milliards ("1 500 Md"), the
+#   unit of French-language public-finance documents; "billion" would read
+#   as the English 10^9.
 _MILLNAMES = {
     "en": ["", " K", " M", " B", " T"],
-    "fr": ["", " k", " M", " Md", " Bn"],
+    "fr": ["", " k", " M", " Md"],
     "pt": ["", " mil", " M", " bi", " tri"],
 }
 
+# Decimal mark, then thousands mark, per language (plotly's ``separators``
+# format). French groups thousands with a narrow no-break space (as Babel's
+# fr_FR does), Brazilian Portuguese with a dot. English keeps ".,".
+_NUMBER_SEPARATORS = {
+    "fr": ",\u202f",
+    "pt": ",.",
+}
 
-def millify(n, lang="en"):
-    """Compress ``n`` to a magnitude-suffixed string.
 
-    * English: ``"1.50 M"`` / ``"2.00 B"`` / ``"3.50 T"``.
-    * French: ``"1,50 M"`` / ``"2,00 Md"`` / ``"3,50 Bn"``.
-    * Portuguese: ``"1,50 M"`` / ``"2,00 bi"`` / ``"3,50 tri"``.
-    """
-    n = float(n)
-    if math.isnan(n):
-        return "N/A"
-    names = _MILLNAMES.get(lang, _MILLNAMES["en"])
-    millidx = max(
+def _magnitude(n, names):
+    """Index into ``names`` of the suffix for ``n``: 0 below a thousand,
+    1 for thousands, 2 for millions, 3 for billions, 4 for trillions and
+    beyond (the last suffix)."""
+    return max(
         0,
         min(
             len(names) - 1, int(math.floor(0 if n == 0 else math.log10(abs(n)) / 3))
         ),
     )
 
-    result = "{:.2f}{}".format(n / 10 ** (3 * millidx), names[millidx])
-    if lang in {"fr", "pt"}:
-        result = result.replace(".", ",")
-    return result
+
+def millify(n, lang="en", decimals=2, magnitude=None):
+    """Compress ``n`` to a magnitude-suffixed string.
+
+    * English: ``"1.50 M"`` / ``"2.00 B"`` / ``"3.50 T"``.
+    * French: ``"1,50 M"`` / ``"2,00 Md"`` / ``"3\u202f500,00 Md"``.
+    * Portuguese: ``"1,50 M"`` / ``"2,00 bi"`` / ``"3,50 tri"``.
+
+    ``decimals`` sets the digits after the decimal mark. ``magnitude`` forces
+    the suffix (an index into the language's suffixes, as ``_magnitude``
+    returns it) so that several numbers can share one unit.
+    """
+    n = float(n)
+    if math.isnan(n):
+        return "N/A"
+    names = _MILLNAMES.get(lang, _MILLNAMES["en"])
+    millidx = _magnitude(n, names) if magnitude is None else magnitude
+
+    number = "{:,.{}f}".format(n / 10 ** (3 * millidx), decimals)
+    separators = _NUMBER_SEPARATORS.get(lang)
+    if separators:
+        decimal, thousands = separators
+        number = "".join(
+            decimal if c == "." else thousands if c == "," else c for c in number
+        )
+    return number + names[millidx]
+
+
+# Plotly writes negative tick labels with the minus sign, not a hyphen.
+_MINUS_SIGN = "\u2212"
+
+
+def _decimals_for(x):
+    """Fewest decimals (up to 3) that write ``x`` exactly."""
+    for decimals in range(3):
+        if abs(round(x, decimals) - x) <= 1e-9 * max(1.0, abs(x)):
+            return decimals
+    return 3
+
+
+def _nice_step(span, target):
+    """The 1, 2 or 5 times a power of ten that cuts ``span`` into the number
+    of steps closest to ``target``."""
+    power = 10 ** math.floor(math.log10(span / target))
+    candidates = [factor * power for factor in (1, 2, 5, 10)]
+    return min(candidates, key=lambda step: (abs(span / step - target), -step))
+
+
+def amount_ticks(low, high, lang="en", target=5, include_zero=True):
+    """Tick values and labels for an amount axis spanning ``low`` to ``high``.
+
+    The values are the multiples of a round step (see ``_nice_step``) from
+    just below ``low`` to just above ``high``, about ``target`` of them, with
+    0 among them when ``include_zero``. The labels share the suffix of the
+    largest value and as many decimals as the step needs: "0", "500 Md",
+    "1\u202f000 Md" in French. Returns two empty lists when there is no span.
+    """
+    if low is None or high is None or pd.isna(low) or pd.isna(high):
+        return [], []
+    if include_zero:
+        low, high = min(low, 0), max(high, 0)
+    span = high - low
+    if span <= 0:
+        span = abs(high)
+    if span == 0:
+        return [], []
+    step = _nice_step(span, target)
+    first = math.floor(low / step + 1e-9)
+    last = math.ceil(high / step - 1e-9)
+    values = [float(f"{k * step:.12g}") for k in range(first, last + 1)]
+
+    names = _MILLNAMES.get(lang, _MILLNAMES["en"])
+    magnitude = _magnitude(max(abs(v) for v in values), names)
+    decimals = _decimals_for(step / 10 ** (3 * magnitude))
+    labels = [
+        "0" if v == 0
+        else millify(v, lang, decimals=decimals, magnitude=magnitude).replace("-", _MINUS_SIGN)
+        for v in values
+    ]
+    return values, labels
+
+
+def _finite(values):
+    return [float(v) for v in values if v is not None and not pd.isna(v)]
+
+
+def apply_amount_colorbar(fig, lang="en", coloraxis="coloraxis", target=5):
+    """Label the colour bar of ``coloraxis`` with ``amount_ticks`` over its
+    colour range (``cmin``/``cmax``, else the values coloured with it)."""
+    low, high = fig.layout[coloraxis].cmin, fig.layout[coloraxis].cmax
+    if low is None or high is None:
+        values = []
+        for trace in fig.data:
+            if getattr(trace, "coloraxis", None) == coloraxis and trace.z is not None:
+                values += _finite(trace.z)
+        if not values:
+            return fig
+        low, high = min(values), max(values)
+    ticks, labels = amount_ticks(low, high, lang=lang, target=target, include_zero=False)
+    shown = [(v, label) for v, label in zip(ticks, labels) if low <= v <= high]
+    if shown:
+        fig.update_layout({coloraxis: dict(colorbar=dict(
+            tickmode="array",
+            tickvals=[v for v, _ in shown],
+            ticktext=[label for _, label in shown],
+        ))})
+    return fig
 
 
 def filter_geojson_by_country(geojson, country):
@@ -601,14 +705,12 @@ def scale_currency_axes(fig, axes, peak, currency, lang="en"):
 def apply_locale(fig, lang="en"):
     """Set plotly's number-format locale on ``fig`` so its native renderers
     (hovertemplate format specs like ``%{y:.2f}%``, axis tick labels, etc.)
-    produce comma decimals for French/Portuguese and English decimals in English.
-
-    ``separators`` is a 2-char plotly attribute: first = decimal, second =
-    thousands. ``",."`` means comma decimal and dot thousands, matching
-    common French/Portuguese number formatting.
+    produce the language's decimal and thousands marks. English keeps
+    plotly's defaults.
     """
-    if lang in {"fr", "pt"}:
-        fig.update_layout(separators=",.")
+    separators = _NUMBER_SEPARATORS.get(lang)
+    if separators:
+        fig.update_layout(separators=separators)
     return fig
 
 

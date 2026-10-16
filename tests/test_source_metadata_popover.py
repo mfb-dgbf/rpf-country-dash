@@ -1,3 +1,4 @@
+import re
 import unittest
 from components.source_metadata_popover import build_modal_info, get_coverage_years, CHART_METADATA
 
@@ -318,13 +319,37 @@ class TestBuildModalInfo(unittest.TestCase):
 
     def test_build_modal_info_chart_level_info(self):
         """Charts with ``info_key`` produce a translated chart-level ``info`` string."""
-        info_en = build_modal_info("revenue-expenditure-combined", "Togo", self.source_meta, lang="en")
-        self.assertIsNotNone(info_en.get("info"))
-        self.assertIn("composite view", info_en["info"].lower())
+        views = {
+            "en": ["Official Report", "GFS", "WEO"],
+            "fr": ["Rapport officiel", "SFP", "PEM"],
+            "pt": ["Relatório oficial", "GFS", "WEO"],
+        }
+        for lang, names in views.items():
+            with self.subTest(lang=lang):
+                info = build_modal_info("revenue-expenditure-combined", "Togo", self.source_meta, lang=lang)["info"]
+                self.assertIsNotNone(info)
+                self.assertNotIn("compos", info.lower())
+                self.assertIn("DGBF", info)
+                for name in names:
+                    self.assertIn(name, info)
 
-        info_fr = build_modal_info("revenue-expenditure-combined", "Togo", self.source_meta, lang="fr")
-        self.assertIsNotNone(info_fr.get("info"))
-        self.assertIn("vue composite", info_fr["info"].lower())
+    def test_togo_official_source_cites_the_dgbf_not_the_execution_report(self):
+        old_claims = ["Rapport d'exécution du budget de l'État", "Budget Execution Report",
+                      "Relatório anual de Execução Orçamentária", "Relatório de execução do orçamento do Estado"]
+        for lang in ("en", "fr", "pt"):
+            with self.subTest(lang=lang):
+                info = build_modal_info("revenue-expenditure-combined", "Togo", self.source_meta, lang=lang)
+                section = info["source_sections"][0]
+                self.assertIn("DGBF", section["source_name"])
+                self.assertIn("DGBF", section["description"])
+                for claim in old_claims:
+                    self.assertNotIn(claim, section["source_name"])
+                    self.assertNotIn(claim, section["description"])
+
+    def test_french_fiscal_balance_texts_keep_non_breaking_spaces(self):
+        info = build_modal_info("revenue-expenditure-combined", "Togo", self.source_meta, lang="fr")
+        for text in (info["info"], info["source_sections"][0]["description"]):
+            self.assertIsNone(re.search(r" [;:?%]", text), text)
 
     def test_build_modal_info_no_chart_level_info(self):
         """Charts without ``info_key`` return ``info=None``."""

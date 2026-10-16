@@ -40,12 +40,12 @@ VIEW_OFFICIAL = "official"
 VIEW_GFS = "gfs"
 VIEW_WEO = "weo"
 
-# Countries where the composite fiscal-balance view is meaningful. Composite
-# stitches GFS (budgetary central govt) and WEO (general govt), which are only
-# comparable where subnational budget activity is negligible — true for Togo,
-# not for decentralized countries like Colombia.
+# Countries offered the composite fiscal-balance view; empty, so no country
+# gets it. Composite stitches GFS (budgetary central govt) and WEO (general
+# govt) around the official report, which are only comparable where
+# subnational budget activity is negligible.
 #TODO: investigate which other countries have negligible subnational budgets and could be added to this list.
-COMPOSITE_VIEW_COUNTRIES = frozenset({"Togo"})
+COMPOSITE_VIEW_COUNTRIES = frozenset()
 
 
 def get_map_disclaimer(lang="en"):

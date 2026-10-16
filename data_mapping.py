@@ -57,10 +57,17 @@ def _add_real_funding_split_columns(df):
     if "foreign_funded_budget" not in df.columns:
         if {"budget", "domestic_funded_budget"}.issubset(df.columns):
             foreign = df["budget"] - df["domestic_funded_budget"]
-            # domestic == budget is used in sector data as "foreign unknown".
-            foreign = foreign.where(
-                df["domestic_funded_budget"].round(0) != df["budget"].round(0)
-            )
+            # domestic == budget is the sector data's "foreign unknown" for a
+            # country whose rows never split a budget. Where some of its rows
+            # do, the split is known and domestic == budget means no foreign
+            # funding.
+            all_domestic = df["domestic_funded_budget"].round(0) == df["budget"].round(0)
+            split = foreign.notna() & ~all_domestic
+            if "country_name" in df.columns:
+                country_splits = split.groupby(df["country_name"]).transform("any")
+            else:
+                country_splits = pd.Series(split.any(), index=df.index)
+            foreign = foreign.where(~all_domestic | country_splits)
             df["foreign_funded_budget"] = foreign
         else:
             df["foreign_funded_budget"] = np.nan
