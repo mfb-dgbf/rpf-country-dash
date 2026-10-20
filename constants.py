@@ -60,6 +60,11 @@ def hidden_charts_setting(default):
 # Hiding a chart removes its whole section — heading, narrative and callbacks.
 HIDDEN_CHARTS = hidden_charts_setting({"education-outcome", "health-outcome"})
 
+# Narratives state facts; the trailing interpretation ("This might suggest a
+# policy shift…") is opinion, hidden on this deployment.
+# SHOW_NARRATIVE_INTERPRETATION=true puts it back.
+SHOW_NARRATIVE_INTERPRETATION = bool_setting("SHOW_NARRATIVE_INTERPRETATION", False)
+
 TREND_THRESHOLDS = 0.4
 
 

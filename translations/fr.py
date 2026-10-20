@@ -603,8 +603,11 @@ TRANSLATIONS = {
     # are articled prose forms ("la santé", "la défense") for the second
     # clause ("avec la santé à 5.2%"), which reads as natural French.
     "narrative.both_similar_rates": "Les catégories {high} et {low} ont augmenté à des taux similaires, avec {high_narrative} à {high_rate:.1f} % et {low_narrative} à {low_rate:.1f} % par an.",
-    "narrative.high_expanded": "La catégorie {high} {high_phrase}, tandis que la catégorie {low} {low_phrase}. Cela pourrait suggérer un changement de politique vers la priorisation de la catégorie {high}, si le déploiement des ressources est conforme aux priorités de politique publique.",
-    "narrative.low_outpacing": "La catégorie {low} {low_phrase}, dépassant la catégorie {high}, qui {high_phrase}. Cela suggère un accent accru sur la catégorie {high}, si le déploiement des ressources est conforme aux priorités de politique publique.",
+    # The _interpretation sentences only appear when SHOW_NARRATIVE_INTERPRETATION is on.
+    "narrative.high_expanded": "La catégorie {high} {high_phrase}, tandis que la catégorie {low} {low_phrase}.",
+    "narrative.high_expanded_interpretation": " Cela pourrait suggérer un changement de politique vers la priorisation de la catégorie {high}, si le déploiement des ressources est conforme aux priorités de politique publique.",
+    "narrative.low_outpacing": "La catégorie {low} {low_phrase}, dépassant la catégorie {high}, qui {high_phrase}.",
+    "narrative.low_outpacing_interpretation": " Cela suggère un accent accru sur la catégorie {high}, si le déploiement des ressources est conforme aux priorités de politique publique.",
     "narrative.expanded_significantly": "a augmenté à un rythme soutenu de {rate:.1f} %",
     "narrative.grew_steady": "a augmenté à un rythme régulier de {rate:.1f} %",
     "narrative.declined_by_rate": "a diminué de {rate:.1f} %",
