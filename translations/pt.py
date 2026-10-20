@@ -138,6 +138,8 @@ TRANSLATIONS = {
     "radio.inflation_adjusted_budget": "Orçamento ajustado pela inflação",
     "radio.execution_rate": "Taxa de execução",
     "radio.variance": "Desvio",
+    # Shown beside the toggle: both views draw the same series.
+    "note.execution_deviation": "As duas visões mostram os mesmos dados — o desvio é simplesmente a taxa de execução menos 100%.",
 
     # --- Source annotations / footer / disclaimer ---
     "source.boost_cpi": "Fonte: BOOST e IPC: Banco Mundial",

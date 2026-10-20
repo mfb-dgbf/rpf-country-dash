@@ -135,6 +135,8 @@ TRANSLATIONS = {
     "radio.inflation_adjusted_budget": "Inflation-adjusted Budget",
     "radio.execution_rate": "Execution rate",
     "radio.variance": "Deviation",
+    # Shown beside the toggle: both views draw the same series.
+    "note.execution_deviation": "Both views show the same data — the deviation is simply the execution rate minus 100%.",
 
     # --- Source annotations ---
     "source.boost_cpi": "Source: BOOST & CPI: World Bank",

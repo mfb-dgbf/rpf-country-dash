@@ -228,23 +228,26 @@ def render_overview_content(tab, lang):
                         dbc.Col(
                             [
                                 html.Div(
-                                    dbc.RadioItems(
-                                        id="budget-execution-metric",
-                                        options=[
-                                            {
-                                                "label": t("radio.execution_rate", lang),
-                                                "value": "execution_rate",
-                                            },
-                                            {
-                                                "label": t("radio.variance", lang),
-                                                "value": "variance",
-                                            },
-                                        ],
-                                        value="execution_rate",
-                                        inline=True,
-                                        style={"padding": "10px"},
-                                        labelStyle={"margin-right": "20px"},
-                                    ),
+                                    [
+                                        dbc.RadioItems(
+                                            id="budget-execution-metric",
+                                            options=[
+                                                {
+                                                    "label": t("radio.execution_rate", lang),
+                                                    "value": "execution_rate",
+                                                },
+                                                {
+                                                    "label": t("radio.variance", lang),
+                                                    "value": "variance",
+                                                },
+                                            ],
+                                            value="execution_rate",
+                                            inline=True,
+                                            style={"padding": "10px"},
+                                            labelStyle={"margin-right": "20px"},
+                                        ),
+                                        budget_funding_execution.execution_metric_note(lang),
+                                    ],
                                     className="disclaimer-div",
                                 ),
                                 chart_container("budget-execution"),
