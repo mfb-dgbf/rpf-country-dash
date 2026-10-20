@@ -42,6 +42,7 @@ from constants import (
     VIEW_GFS,
     VIEW_WEO,
     COMPOSITE_VIEW_COUNTRIES,
+    SHOW_SUBNATIONAL,
 )
 from translations import t, definite, genitive, localize_currency_name
 from viz_theme import QUALITATIVE_ALT, get_map_colorscale, CENTRAL_COLOR, REGIONAL_COLOR
@@ -84,10 +85,10 @@ def layout():
     Input("stored-language", "data"),
 )
 def update_overview_tab_labels(lang):
-    return [
-        dbc.Tab(label=t("tab.over_time", lang), tab_id="overview-tab-time"),
-        dbc.Tab(label=t("tab.across_space", lang), tab_id="overview-tab-space"),
-    ]
+    tabs = [dbc.Tab(label=t("tab.over_time", lang), tab_id="overview-tab-time")]
+    if SHOW_SUBNATIONAL:
+        tabs.append(dbc.Tab(label=t("tab.across_space", lang), tab_id="overview-tab-space"))
+    return tabs
 
 
 register_country_title("overview")

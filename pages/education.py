@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
-from constants import get_map_disclaimer
+from constants import get_map_disclaimer, SHOW_SUBNATIONAL
 from translations import t, definite, genitive, preposition, _LANGUAGES
 from viz_theme import CENTRAL_COLOR, REGIONAL_COLOR
 from queries import QueryService
@@ -77,10 +77,10 @@ def layout():
     Input("stored-language", "data"),
 )
 def update_edu_tab_labels(lang):
-    return [
-        dbc.Tab(label=t("tab.over_time", lang), tab_id="edu-tab-time"),
-        dbc.Tab(label=t("tab.across_space", lang), tab_id="edu-tab-space"),
-    ]
+    tabs = [dbc.Tab(label=t("tab.over_time", lang), tab_id="edu-tab-time")]
+    if SHOW_SUBNATIONAL:
+        tabs.append(dbc.Tab(label=t("tab.across_space", lang), tab_id="edu-tab-space"))
+    return tabs
 
 
 register_country_title("education")

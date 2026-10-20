@@ -26,6 +26,24 @@ def year_setting(name, default):
 # The END_YEAR environment variable moves it once a year's accounts are closed.
 END_YEAR = year_setting("END_YEAR", 2024)
 
+
+def bool_setting(name, default):
+    """True/False from environment variable ``name``, or ``default`` when unset or empty."""
+    raw = os.getenv(name, "").strip().lower()
+    if not raw:
+        return default
+    if raw in ("1", "true", "yes", "on"):
+        return True
+    if raw in ("0", "false", "no", "off"):
+        return False
+    raise ValueError(f"{name} must be true or false, got {raw!r}")
+
+
+# The subnational (across-space) visualizations only make sense where regional
+# budget data is published; SHOW_SUBNATIONAL=false removes the "Across space"
+# tab from the overview, education and health pages.
+SHOW_SUBNATIONAL = bool_setting("SHOW_SUBNATIONAL", True)
+
 TREND_THRESHOLDS = 0.4
 
 
