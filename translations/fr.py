@@ -139,7 +139,7 @@ TRANSLATIONS = {
     "radio.execution_rate": "Taux d'exécution",
     "radio.variance": "Déviation",
     # Shown beside the toggle: both views draw the same series.
-    "note.execution_deviation": "Les deux vues présentent les mêmes données — la déviation est simplement le taux d'exécution moins 100 %.",
+    "note.execution_deviation": "Les deux vues présentent les mêmes données : l'écart est simplement le taux d'exécution moins 100 %.",
 
     # --- Source annotations ---
     "source.boost_cpi": "Source : BOOST & IPC : World Bank",
