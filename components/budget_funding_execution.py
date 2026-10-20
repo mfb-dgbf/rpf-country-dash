@@ -132,10 +132,11 @@ def _build_funding(country, lang, budget_terms, sector):
 def execution_metric_note(lang="en"):
     """Note beside the execution-rate/deviation toggle: the two views draw the
     same series, the deviation being the execution rate minus 100%."""
+    # Dim via opacity, not .text-muted: the Bootstrap theme's muted color is
+    # translucent white, invisible on the light card background.
     return html.P(
         t("note.execution_deviation", lang),
-        className="text-muted",
-        style={"fontSize": "0.85rem", "margin": "0 10px 4px"},
+        style={"fontSize": "0.85rem", "opacity": 0.7, "margin": "0 10px 4px"},
     )
 
 
