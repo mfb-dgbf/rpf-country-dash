@@ -58,7 +58,7 @@ def hidden_charts_setting(default):
 # The one place to hide a chart on this deployment: add its id here (or set
 # the HIDDEN_CHARTS environment variable to override this set per deployment).
 # Hiding a chart removes its whole section — heading, narrative and callbacks.
-HIDDEN_CHARTS = hidden_charts_setting({"education-outcome"})
+HIDDEN_CHARTS = hidden_charts_setting({"education-outcome", "health-outcome"})
 
 TREND_THRESHOLDS = 0.4
 

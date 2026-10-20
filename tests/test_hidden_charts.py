@@ -1,4 +1,5 @@
-"""HIDDEN_CHARTS removes a chart's whole section; education-outcome is hidden here."""
+"""HIDDEN_CHARTS removes a chart's whole section; the education and health
+outcome charts are hidden on this branch."""
 
 import importlib
 import os
@@ -12,7 +13,7 @@ import constants
 # Page modules call dash.register_page on import, which needs a pages-enabled app.
 dash.Dash(__name__, use_pages=True, pages_folder="")
 
-from pages import education  # noqa: E402
+from pages import education, health  # noqa: E402
 
 
 def component_ids(component):
@@ -53,31 +54,39 @@ class HiddenChartsSettingTest(unittest.TestCase):
                 frozenset({"education-outcome", "health-outcome"}),
             )
 
-    def test_education_outcome_is_hidden_on_this_branch(self):
+    def test_outcome_charts_are_hidden_on_this_branch(self):
         self.assertIn("education-outcome", constants.HIDDEN_CHARTS)
+        self.assertIn("health-outcome", constants.HIDDEN_CHARTS)
 
 
-class EducationOutcomeSectionTest(unittest.TestCase):
-    OUTCOME_IDS = {"education-outcome", "education-outcome-measure", "education-outcome-narrative"}
+class OutcomeSectionTest(unittest.TestCase):
+    PAGES = (
+        (education, "render_education_content", "edu-tab-time", "education"),
+        (health, "render_health_content", "health-tab-time", "health"),
+    )
 
     def _reload(self):
         importlib.reload(constants)
-        importlib.reload(education)
-
-    def _time_tab_ids(self):
-        return component_ids(education.render_education_content("edu-tab-time", "en"))
+        for module, _, _, _ in self.PAGES:
+            importlib.reload(module)
 
     def test_section_follows_the_setting(self):
         try:
-            with patch.dict(os.environ, {"HIDDEN_CHARTS": "education-outcome"}):
+            with patch.dict(os.environ, {"HIDDEN_CHARTS": "education-outcome,health-outcome"}):
                 self._reload()
-                self.assertFalse(self.OUTCOME_IDS & self._time_tab_ids())
+                for module, render, tab, chart in self.PAGES:
+                    with self.subTest(page=chart, hidden=True):
+                        ids = component_ids(getattr(module, render)(tab, "en"))
+                        self.assertFalse({f"{chart}-outcome", f"{chart}-outcome-narrative"} & ids)
             with patch.dict(os.environ, {"HIDDEN_CHARTS": ""}):
                 self._reload()
-                ids = self._time_tab_ids()
-                self.assertTrue(self.OUTCOME_IDS <= ids)
-                # the rest of the tab is untouched either way
-                self.assertIn("education-total", ids)
+                for module, render, tab, chart in self.PAGES:
+                    with self.subTest(page=chart, hidden=False):
+                        ids = component_ids(getattr(module, render)(tab, "en"))
+                        self.assertIn(f"{chart}-outcome", ids)
+                        self.assertIn(f"{chart}-outcome-narrative", ids)
+                        # the rest of the tab is untouched either way
+                        self.assertIn(f"{chart}-total", ids)
         finally:
             self._reload()
 

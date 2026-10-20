@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
-from constants import get_map_disclaimer, SHOW_SUBNATIONAL
+from constants import get_map_disclaimer, SHOW_SUBNATIONAL, HIDDEN_CHARTS
 from translations import t, definite, genitive, preposition, _LANGUAGES
 from viz_theme import CENTRAL_COLOR, REGIONAL_COLOR
 from queries import QueryService
@@ -96,15 +96,20 @@ def fetch_health_total_data_once(health_data, shared_data):
     return dash.no_update
 
 
-@callback(
-    Output("stored-data-health-outcome", "data"),
-    Input("stored-data-health-outcome", "data"),
-)
 def fetch_health_outcome_data_once(health_data):
     if health_data is None:
         server_store.get("uhc_index")
         return {"ready": True}
     return dash.no_update
+
+
+# A hidden health-outcome chart needs neither its data nor its render
+# callback; registering them anyway would update components the layout lacks.
+if "health-outcome" not in HIDDEN_CHARTS:
+    callback(
+        Output("stored-data-health-outcome", "data"),
+        Input("stored-data-health-outcome", "data"),
+    )(fetch_health_outcome_data_once)
 
 
 @callback(
@@ -116,6 +121,52 @@ def fetch_health_private_data_once(health_data):
         server_store.get("health_private_expenditure")
         return {"ready": True}
     return dash.no_update
+
+
+def health_outcome_section(lang):
+    """The spending-vs-outcome rows of the over-time tab, or nothing when the
+    health-outcome chart is hidden (its callbacks are skipped below too)."""
+    if "health-outcome" in HIDDEN_CHARTS:
+        return []
+    return [
+        dbc.Row(
+            dbc.Col(
+                html.Hr(),
+            )
+        ),
+        dbc.Row(
+            dbc.Col(
+                html.H3(children=t("heading.public_spending_health_outcome", lang))
+            )
+        ),
+        dbc.Row(
+            [
+                dbc.Col(
+                    chart_container("health-outcome"),
+                    xs={"size": 12, "offset": 0},
+                    sm={"size": 12, "offset": 0},
+                    md={"size": 12, "offset": 0},
+                    lg={"size": 7, "offset": 0},
+                ),
+                dbc.Col(
+                    [
+                        html.P(
+                            id="health-outcome-measure",
+                            children="",
+                        ),
+                        html.P(
+                            id="health-outcome-narrative",
+                            children=t("loading", lang),
+                        ),
+                    ],
+                    xs={"size": 12, "offset": 0},
+                    sm={"size": 12, "offset": 0},
+                    md={"size": 12, "offset": 0},
+                    lg={"size": 5, "offset": 0},
+                ),
+            ]
+        ),
+    ]
 
 
 @callback(
@@ -166,43 +217,7 @@ def render_health_content(tab, lang):
                         ),
                     ]
                 ),
-                dbc.Row(
-                    dbc.Col(
-                        html.Hr(),
-                    )
-                ),
-                dbc.Row(
-                    dbc.Col(
-                        html.H3(children=t("heading.public_spending_health_outcome", lang))
-                    )
-                ),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            chart_container("health-outcome"),
-                            xs={"size": 12, "offset": 0},
-                            sm={"size": 12, "offset": 0},
-                            md={"size": 12, "offset": 0},
-                            lg={"size": 7, "offset": 0},
-                        ),
-                        dbc.Col(
-                            [
-                                html.P(
-                                    id="health-outcome-measure",
-                                    children="",
-                                ),
-                                html.P(
-                                    id="health-outcome-narrative",
-                                    children=t("loading", lang),
-                                ),
-                            ],
-                            xs={"size": 12, "offset": 0},
-                            sm={"size": 12, "offset": 0},
-                            md={"size": 12, "offset": 0},
-                            lg={"size": 5, "offset": 0},
-                        ),
-                    ]
-                ),
+                *health_outcome_section(lang),
                 dbc.Row(
                     dbc.Col(
                         html.Hr(),
@@ -782,16 +797,6 @@ def outcome_narrative(outcome_df, expenditure_df, country, currency_code, lang="
     return result["narrative"]
 
 
-@callback(
-    Output("health-outcome", "figure"),
-    Output("health-outcome-measure", "children"),
-    Output("health-outcome-narrative", "children"),
-    Input("stored-data-health-outcome", "data"),
-    Input("stored-data-health-total", "data"),
-    Input("country-select", "value"),
-    Input("stored-basic-country-data", "data"),
-    Input("stored-language", "data"),
-)
 def render_health_outcome(outcome_data, total_data, country, country_data, lang):
     lang = lang or "en"
     if not total_data or not outcome_data or not country_data or not country:
@@ -867,6 +872,19 @@ def render_health_outcome(outcome_data, total_data, country, country_data, lang)
 
     narrative = outcome_narrative(uhc, pub_exp, country, currency_code, lang=lang)
     return apply_locale(fig, lang), outcome_measure(lang=lang), narrative
+
+
+if "health-outcome" not in HIDDEN_CHARTS:
+    callback(
+        Output("health-outcome", "figure"),
+        Output("health-outcome-measure", "children"),
+        Output("health-outcome-narrative", "children"),
+        Input("stored-data-health-outcome", "data"),
+        Input("stored-data-health-total", "data"),
+        Input("country-select", "value"),
+        Input("stored-basic-country-data", "data"),
+        Input("stored-language", "data"),
+    )(render_health_outcome)
 
 
 @callback(
