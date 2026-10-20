@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
-from constants import get_map_disclaimer, SHOW_SUBNATIONAL
+from constants import get_map_disclaimer, SHOW_SUBNATIONAL, HIDDEN_CHARTS
 from translations import t, definite, genitive, preposition, _LANGUAGES
 from viz_theme import CENTRAL_COLOR, REGIONAL_COLOR
 from queries import QueryService
@@ -98,17 +98,22 @@ def fetch_edu_total_data_once(edu_data, shared_data):
     return dash.no_update
 
 
-@callback(
-    Output("stored-data-education-outcome", "data"),
-    Input("stored-data-education-outcome", "data"),
-    Input("stored-data", "data"),
-)
 def fetch_edu_outcome_data_once(edu_data, shared_data):
     if edu_data is None and shared_data:
         server_store.get("learning_poverty")
         server_store.get("hd_index")
         return {"ready": True}
     return dash.no_update
+
+
+# A hidden education-outcome chart needs neither its data nor its render
+# callback; registering them anyway would update components the layout lacks.
+if "education-outcome" not in HIDDEN_CHARTS:
+    callback(
+        Output("stored-data-education-outcome", "data"),
+        Input("stored-data-education-outcome", "data"),
+        Input("stored-data", "data"),
+    )(fetch_edu_outcome_data_once)
 
 
 @callback(
@@ -120,6 +125,55 @@ def fetch_edu_private_data_once(edu_data):
         server_store.get("edu_private_expenditure")
         return {"ready": True}
     return dash.no_update
+
+
+def education_outcome_section(lang):
+    """The spending-vs-outcome rows of the over-time tab, or nothing when the
+    education-outcome chart is hidden (its callbacks are skipped below too)."""
+    if "education-outcome" in HIDDEN_CHARTS:
+        return []
+    return [
+        dbc.Row(
+            dbc.Col(
+                html.Hr(),
+            )
+        ),
+        dbc.Row(
+            dbc.Col(
+                html.H3(children=t("heading.public_spending_education_outcome", lang))
+            )
+        ),
+        dbc.Row(
+            [
+                dbc.Col(
+                    chart_container("education-outcome"),
+                    xs={"size": 12, "offset": 0},
+                    sm={"size": 12, "offset": 0},
+                    md={"size": 12, "offset": 0},
+                    lg={"size": 7, "offset": 0},
+                ),
+                dbc.Col(
+                    [
+                        html.P(
+                            children=t("narrative.education_outcome_general", lang),
+                        ),
+                        html.P(
+                            id="education-outcome-measure",
+                            children="",
+                        ),
+                        html.P(
+                            id="education-outcome-narrative",
+                            children=t("loading", lang),
+                        ),
+                    ],
+                    xs={"size": 12, "offset": 0},
+                    sm={"size": 12, "offset": 0},
+                    md={"size": 12, "offset": 0},
+                    lg={"size": 5, "offset": 0},
+                ),
+            ]
+        ),
+    ]
 
 
 @callback(
@@ -170,46 +224,7 @@ def render_education_content(tab, lang):
                         ),
                     ]
                 ),
-                dbc.Row(
-                    dbc.Col(
-                        html.Hr(),
-                    )
-                ),
-                dbc.Row(
-                    dbc.Col(
-                        html.H3(children=t("heading.public_spending_education_outcome", lang))
-                    )
-                ),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            chart_container("education-outcome"),
-                            xs={"size": 12, "offset": 0},
-                            sm={"size": 12, "offset": 0},
-                            md={"size": 12, "offset": 0},
-                            lg={"size": 7, "offset": 0},
-                        ),
-                        dbc.Col(
-                            [
-                                html.P(
-                                    children=t("narrative.education_outcome_general", lang),
-                                ),
-                                html.P(
-                                    id="education-outcome-measure",
-                                    children="",
-                                ),
-                                html.P(
-                                    id="education-outcome-narrative",
-                                    children=t("loading", lang),
-                                ),
-                            ],
-                            xs={"size": 12, "offset": 0},
-                            sm={"size": 12, "offset": 0},
-                            md={"size": 12, "offset": 0},
-                            lg={"size": 5, "offset": 0},
-                        ),
-                    ]
-                ),
+                *education_outcome_section(lang),
                 dbc.Row(
                     dbc.Col(
                         html.Hr(),
@@ -812,16 +827,6 @@ def outcome_narrative(outcome_df, pov_df, expenditure_df, country, currency_code
     return f"{attendance_result['narrative']}{t('narrative.outcome_meanwhile', lang, pcc=poverty_narrative)}"
 
 
-@callback(
-    Output("education-outcome", "figure"),
-    Output("education-outcome-measure", "children"),
-    Output("education-outcome-narrative", "children"),
-    Input("stored-data-education-outcome", "data"),
-    Input("stored-data-education-total", "data"),
-    Input("country-select", "value"),
-    Input('stored-basic-country-data', 'data'),
-    Input("stored-language", "data"),
-)
 def render_education_outcome(outcome_data, total_data, country, basic_country_data, lang):
     lang = lang or "en"
     if not total_data or not outcome_data or not basic_country_data or not country:
@@ -914,6 +919,19 @@ def render_education_outcome(outcome_data, total_data, country, basic_country_da
     measure = outcome_measure(country, lang=lang)
     narrative = outcome_narrative(indicator, learning_poverty, pub_exp, country, currency_code, lang=lang)
     return apply_locale(fig, lang), measure, narrative
+
+
+if "education-outcome" not in HIDDEN_CHARTS:
+    callback(
+        Output("education-outcome", "figure"),
+        Output("education-outcome-measure", "children"),
+        Output("education-outcome-narrative", "children"),
+        Input("stored-data-education-outcome", "data"),
+        Input("stored-data-education-total", "data"),
+        Input("country-select", "value"),
+        Input('stored-basic-country-data', 'data'),
+        Input("stored-language", "data"),
+    )(render_education_outcome)
 
 
 @callback(

@@ -44,6 +44,22 @@ def bool_setting(name, default):
 # tab from the overview, education and health pages.
 SHOW_SUBNATIONAL = bool_setting("SHOW_SUBNATIONAL", True)
 
+
+def hidden_charts_setting(default):
+    """Chart ids in the HIDDEN_CHARTS environment variable (comma-separated),
+    or ``default`` when unset. Set HIDDEN_CHARTS= (empty) to hide nothing."""
+    raw = os.getenv("HIDDEN_CHARTS")
+    if raw is None:
+        return frozenset(default)
+    return frozenset(c.strip() for c in raw.split(",") if c.strip())
+
+
+# Charts removed from the dashboard, by the id passed to chart_container.
+# The one place to hide a chart on this deployment: add its id here (or set
+# the HIDDEN_CHARTS environment variable to override this set per deployment).
+# Hiding a chart removes its whole section — heading, narrative and callbacks.
+HIDDEN_CHARTS = hidden_charts_setting({"education-outcome"})
+
 TREND_THRESHOLDS = 0.4
 
 
