@@ -43,6 +43,7 @@ from constants import (
     VIEW_GFS,
     VIEW_WEO,
     COMPOSITE_VIEW_COUNTRIES,
+    SHOW_SUBNATIONAL,
 )
 from translations import t, definite, genitive, localize_currency_name
 from viz_theme import QUALITATIVE_ALT, get_map_colorscale, CENTRAL_COLOR, REGIONAL_COLOR
@@ -85,10 +86,10 @@ def layout():
     Input("stored-language", "data"),
 )
 def update_overview_tab_labels(lang):
-    return [
-        dbc.Tab(label=t("tab.over_time", lang), tab_id="overview-tab-time"),
-        dbc.Tab(label=t("tab.across_space", lang), tab_id="overview-tab-space"),
-    ]
+    tabs = [dbc.Tab(label=t("tab.over_time", lang), tab_id="overview-tab-time")]
+    if SHOW_SUBNATIONAL:
+        tabs.append(dbc.Tab(label=t("tab.across_space", lang), tab_id="overview-tab-space"))
+    return tabs
 
 
 register_country_title("overview")
@@ -228,23 +229,26 @@ def render_overview_content(tab, lang):
                         dbc.Col(
                             [
                                 html.Div(
-                                    dbc.RadioItems(
-                                        id="budget-execution-metric",
-                                        options=[
-                                            {
-                                                "label": t("radio.execution_rate", lang),
-                                                "value": "execution_rate",
-                                            },
-                                            {
-                                                "label": t("radio.variance", lang),
-                                                "value": "variance",
-                                            },
-                                        ],
-                                        value="execution_rate",
-                                        inline=True,
-                                        style={"padding": "10px"},
-                                        labelStyle={"margin-right": "20px"},
-                                    ),
+                                    [
+                                        dbc.RadioItems(
+                                            id="budget-execution-metric",
+                                            options=[
+                                                {
+                                                    "label": t("radio.execution_rate", lang),
+                                                    "value": "execution_rate",
+                                                },
+                                                {
+                                                    "label": t("radio.variance", lang),
+                                                    "value": "variance",
+                                                },
+                                            ],
+                                            value="execution_rate",
+                                            inline=True,
+                                            style={"padding": "10px"},
+                                            labelStyle={"margin-right": "20px"},
+                                        ),
+                                        budget_funding_execution.execution_metric_note(lang),
+                                    ],
                                     className="disclaimer-div",
                                 ),
                                 chart_container("budget-execution"),

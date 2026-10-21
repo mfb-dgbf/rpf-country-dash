@@ -135,6 +135,8 @@ TRANSLATIONS = {
     "radio.inflation_adjusted_budget": "Inflation-adjusted Budget",
     "radio.execution_rate": "Execution rate",
     "radio.variance": "Deviation",
+    # Shown beside the toggle: both views draw the same series.
+    "note.execution_deviation": "Both views show the same data — the deviation is simply the execution rate minus 100%.",
 
     # --- Source annotations ---
     "source.boost_cpi": "Source: BOOST & CPI: World Bank",
@@ -511,8 +513,11 @@ TRANSLATIONS = {
     "narrative.budget_after_inflation": " after accounting for inflation. ",
     "narrative.budget_period_end": ". ",
     "narrative.both_similar_rates": "Both the {high} and {low} categories have grown at similar rates, with {high_narrative} growing at {high_rate:.1f}% and {low_narrative} at {low_rate:.1f}% per year.",
-    "narrative.high_expanded": "The {high} category {high_phrase}, while the {low} category {low_phrase}. This might suggest a policy shift towards prioritizing the {high} category, if resource deployment is in line with public policy priorities.",
-    "narrative.low_outpacing": "The {low} category {low_phrase}, outpacing the {high} category, which {high_phrase}. This suggests a greater focus on the {high} category, if resource deployment is in line with public policy priorities.",
+    # The _interpretation sentences only appear when SHOW_NARRATIVE_INTERPRETATION is on.
+    "narrative.high_expanded": "The {high} category {high_phrase}, while the {low} category {low_phrase}.",
+    "narrative.high_expanded_interpretation": " This might suggest a policy shift towards prioritizing the {high} category, if resource deployment is in line with public policy priorities.",
+    "narrative.low_outpacing": "The {low} category {low_phrase}, outpacing the {high} category, which {high_phrase}.",
+    "narrative.low_outpacing_interpretation": " This suggests a greater focus on the {high} category, if resource deployment is in line with public policy priorities.",
     "narrative.expanded_significantly": "expanded significantly at {rate:.1f}%",
     "narrative.grew_steady": "grew at a steady rate of {rate:.1f}%",
     "narrative.declined_by_rate": "declined by {rate:.1f}%",

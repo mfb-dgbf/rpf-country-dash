@@ -26,6 +26,45 @@ def year_setting(name, default):
 # The END_YEAR environment variable moves it once a year's accounts are closed.
 END_YEAR = year_setting("END_YEAR", 2024)
 
+
+def bool_setting(name, default):
+    """True/False from environment variable ``name``, or ``default`` when unset or empty."""
+    raw = os.getenv(name, "").strip().lower()
+    if not raw:
+        return default
+    if raw in ("1", "true", "yes", "on"):
+        return True
+    if raw in ("0", "false", "no", "off"):
+        return False
+    raise ValueError(f"{name} must be true or false, got {raw!r}")
+
+
+# The subnational (across-space) visualizations only make sense where regional
+# budget data is published; SHOW_SUBNATIONAL=false removes the "Across space"
+# tab from the overview, education and health pages.
+SHOW_SUBNATIONAL = bool_setting("SHOW_SUBNATIONAL", True)
+
+
+def hidden_charts_setting(default):
+    """Chart ids in the HIDDEN_CHARTS environment variable (comma-separated),
+    or ``default`` when unset. Set HIDDEN_CHARTS= (empty) to hide nothing."""
+    raw = os.getenv("HIDDEN_CHARTS")
+    if raw is None:
+        return frozenset(default)
+    return frozenset(c.strip() for c in raw.split(",") if c.strip())
+
+
+# Charts removed from the dashboard, by the id passed to chart_container.
+# The one place to hide a chart on this deployment: add its id here (or set
+# the HIDDEN_CHARTS environment variable to override this set per deployment).
+# Hiding a chart removes its whole section — heading, narrative and callbacks.
+HIDDEN_CHARTS = hidden_charts_setting({"education-outcome", "health-outcome"})
+
+# Narratives state facts; the trailing interpretation ("This might suggest a
+# policy shift…") is opinion, hidden on this deployment.
+# SHOW_NARRATIVE_INTERPRETATION=true puts it back.
+SHOW_NARRATIVE_INTERPRETATION = bool_setting("SHOW_NARRATIVE_INTERPRETATION", False)
+
 TREND_THRESHOLDS = 0.4
 
 

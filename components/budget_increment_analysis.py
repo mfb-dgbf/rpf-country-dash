@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from constants import FUNC_COLORS, translate_func
+from constants import FUNC_COLORS, translate_func, SHOW_NARRATIVE_INTERPRETATION
 from translations import t
 import server_store
 
@@ -282,12 +282,18 @@ def format_budget_increment_narrative(
                             high_narrative=highest_func_cat_narrative,
                             low_narrative=lowest_func_cat_narrative,
                             high_phrase=highest_phrase, low_phrase=lowest_phrase)
+        if SHOW_NARRATIVE_INTERPRETATION:
+            func_comparison += t("narrative.high_expanded_interpretation", lang,
+                                 high=highest_func_cat)
     else:
         func_comparison = t("narrative.low_outpacing", lang,
                             high=highest_func_cat, low=lowest_func_cat,
                             high_narrative=highest_func_cat_narrative,
                             low_narrative=lowest_func_cat_narrative,
                             high_phrase=highest_phrase, low_phrase=lowest_phrase)
+        if SHOW_NARRATIVE_INTERPRETATION:
+            func_comparison += t("narrative.low_outpacing_interpretation", lang,
+                                 high=highest_func_cat)
 
     if foreign_funding_isnull:
         external_financing_note = t("narrative.external_financing_included", lang)

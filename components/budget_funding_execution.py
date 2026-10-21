@@ -1,5 +1,6 @@
 import numpy as np
 import plotly.graph_objects as go
+from dash import html
 
 from translations import t, definite, genitive
 from trend_narrative import InsightExtractor, TrendDetector
@@ -130,6 +131,17 @@ def _build_funding(country, lang, budget_terms, sector):
         funding_df, country, lang=lang, budget_terms=budget_terms, sector=sector
     )
     return fig, narrative
+
+
+def execution_metric_note(lang="en"):
+    """Note beside the execution-rate/deviation toggle: the two views draw the
+    same series, the deviation being the execution rate minus 100%."""
+    # Dim via opacity, not .text-muted: the Bootstrap theme's muted color is
+    # translucent white, invisible on the light card background.
+    return html.P(
+        t("note.execution_deviation", lang),
+        style={"fontSize": "0.85rem", "opacity": 0.7, "margin": "0 10px 4px"},
+    )
 
 
 def render_execution_narrative(country, lang="en", sector=None):

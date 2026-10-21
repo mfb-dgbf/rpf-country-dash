@@ -138,6 +138,8 @@ TRANSLATIONS = {
     "radio.inflation_adjusted_budget": "Orçamento ajustado pela inflação",
     "radio.execution_rate": "Taxa de execução",
     "radio.variance": "Desvio",
+    # Shown beside the toggle: both views draw the same series.
+    "note.execution_deviation": "As duas visões mostram os mesmos dados — o desvio é simplesmente a taxa de execução menos 100%.",
 
     # --- Source annotations / footer / disclaimer ---
     "source.boost_cpi": "Fonte: BOOST e IPC: Banco Mundial",
@@ -455,8 +457,11 @@ TRANSLATIONS = {
     "narrative.budget_after_inflation": " depois de considerar a inflação. ",
     "narrative.budget_period_end": ". ",
     "narrative.both_similar_rates": "As categorias {high} e {low} cresceram a taxas semelhantes, com {high_narrative} crescendo {high_rate:.1f}% e {low_narrative} {low_rate:.1f}% ao ano.",
-    "narrative.high_expanded": "A categoria {high} {high_phrase}, enquanto a categoria {low} {low_phrase}. Isso pode sugerir uma mudança de política em direção à priorização de {high}, se a alocação de recursos estiver alinhada às prioridades públicas.",
-    "narrative.low_outpacing": "A categoria {low} {low_phrase}, superando a categoria {high}, que {high_phrase}. Isso sugere maior foco em {high}, se a alocação de recursos estiver alinhada às prioridades públicas.",
+    # The _interpretation sentences only appear when SHOW_NARRATIVE_INTERPRETATION is on.
+    "narrative.high_expanded": "A categoria {high} {high_phrase}, enquanto a categoria {low} {low_phrase}.",
+    "narrative.high_expanded_interpretation": " Isso pode sugerir uma mudança de política em direção à priorização de {high}, se a alocação de recursos estiver alinhada às prioridades públicas.",
+    "narrative.low_outpacing": "A categoria {low} {low_phrase}, superando a categoria {high}, que {high_phrase}.",
+    "narrative.low_outpacing_interpretation": " Isso sugere maior foco em {high}, se a alocação de recursos estiver alinhada às prioridades públicas.",
     "narrative.expanded_significantly": "expandiu significativamente a {rate:.1f}%",
     "narrative.grew_steady": "cresceu a uma taxa estável de {rate:.1f}%",
     "narrative.declined_by_rate": "caiu {rate:.1f}%",
